@@ -1,0 +1,112 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+ 	<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE-edge">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+	
+
+	<style>
+	*
+ 	{word-wrap:break-word;
+ 	box-sizing:border-box;
+ 	}
+	h1
+ 	{   
+ 		
+ 		text-align:center;
+		font-size:150%;
+		margin:50px;
+      
+ 	}
+ 	body p
+ 	{   
+	    position:relative;
+	    float:left;
+ 		background-color: gray;
+		padding-top:30px;
+		padding-left:4px;
+		padding-right:4px;
+ 		border: 3px solid black;
+		
+ 		margin :30px;
+      
+ 	}
+	#p1 #sechead
+	{
+	 background-color: red;
+	}
+	#p2 #sechead
+	{
+	 background-color: green;
+	}
+	#p3 #sechead
+	{
+	 background-color: blue;
+	 color:white;
+	}
+	#sechead
+	{text-align:center; 
+	 position:absolute;
+	 width:30%;
+	 top:0%;
+	 border-left: 3px solid black;
+	 border-bottom: 3px solid black;
+	 right:0%;
+	 font-weight:bold;
+	 font-size:120%;
+	 
+	
+	}
+
+ 		@media (min-width: 992px)
+ 		{ 
+ 			.lg{width: 100%;}
+          /* #p1{width: 33%;word-wrap:break-word;}
+ 			#p2{width: 33%;}
+ 			#p3{width: 33%;}*/
+ 		}
+ 		@media((min-width: 768px) and (max-width: 991px))
+ 		{ 
+ 			.md{width: 100%;}
+ 		/*	#p1{width: 50%;}
+ 			#p2{width: 50%;}
+ 			#p3{width: 100%;}*/
+
+ 		}
+ 		@media(max-width: 767px)
+ 		{ 
+ 			.sm{width: 100%;}
+ 			/*#p1{width: 100%;}
+ 			#p2{width: 100%;}
+ 			#p3{width: 100%;}*/
+
+ 		}
+	</style>
+	
+ 
+	<h1> Our Menu</h1>
+ 	
+ </head>
+ <body>
+ <p id="p1" class="lg md sm">
+ <subt id="sechead">Chicken</subt>
+ this is the first paragraph of the static restaurant website <br> 
+ we have a plethora of menu items in offer, but this is the   <br> 
+ most sought after item from the entire palette
+  </p>
+ <p id="p2" class="lg md sm"> 
+ <subt id="sechead">beef</subt>
+ this is the first paragraph of the static restaurant website <br>
+ we have a plethora of menu items in offer, but this is the   <br>
+ most sought after item from the entire palette
+  </p>
+ <p id="p3" class="lg md sm">
+ <subt id="sechead">sushi</subt>
+  this is the first paragraph of the static restaurant website <br>
+ we have a plethora of menu items in offer, but this is the   <br>
+ most sought after item from the entire palette
+ </p>
+ 
+ </body>
+ </html>

@@ -1,0 +1,9 @@
+set Source= Source
+set destination= destination
+
+
+for /f   %%i in ('dir /b /a-d /od "C:\Users\itaudit\Desktop\bATS\source"') do set "LatestModifiedFile=%%~i"
+ copy /y %Source%\%LatestModifiedFile% %destination%\
+
+
+set /p d=execution done

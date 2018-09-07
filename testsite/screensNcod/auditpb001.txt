@@ -1,0 +1,1469 @@
+--here tierii is added by getting it from clms_rglr_rcvry_dtls_mstr(rg_tierii) 
+--tieri is to be calculated automatically for the new comers. time being let them do manually.
+
+
+PROCEDURE suresh IS
+BEGIN
+	  --***************************************************************************************************
+	--PROGRAMMER ****************SURESH KUMAR T ,CLERK AG'S OFFICE IDNO=1518
+	--UNAUTHORISED MODIFICATION OF THIS PROGRAMME SHALL BE AVOIDED
+	--************************************************************
+	/*
+	1. basic >a and <c                  --inc basic+b
+	2. basic>c and <e                   --inc bafsic+d
+	3. basic>e and f=0 and g=0          --inc basic+d
+	4. basic >a and <e and c=0 and d=0  --inc basic+b
+	5. basic>e and c=0 and d=0          --inc basic+b
+	-- conditions for long pay scale not given
+	*/
+	--******************************************************************************************************
+	--to be used when del command is used in SQL
+:system.message_level:=25;	
+	delete from ags.pis a 
+	where ps_idn in
+		(
+			select ps_idn 
+			from ags.prsnl_infrmtn_systm 
+			where ps_idn=a.ps_idn 
+				and cm_unt_cd=:clms_py_bll_hdr.unt
+				and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+				and  cm_rti_nrti=:clms_py_bll_hdr.rti_nrti
+				--and cm_dni=:clms_py_bll_hdr.cm_mnth_of_acnt 
+		);
+
+
+	insert into ags.pis select ps_idn,cm_bsc_py 
+	from ags.prsnl_infrmtn_systm
+	where cm_unt_cd=:clms_py_bll_hdr.unt
+		and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+		and  cm_rti_nrti=:clms_py_bll_hdr.rti_nrti;
+		-- and cm_dni=:clms_py_bll_hdr.cm_mnth_of_acnt;
+---------------------------------------------------------------------------------------------
+
+
+	declare
+		id varchar2(4);
+		idd varchar2(4);
+		nm varchar2(30);
+		nmm varchar2(30);
+		bs number;
+		bss number;
+		rbss number;
+		----added for dearness pay
+		gp number;
+		gpp number;
+		dpay number;
+		ddpay number;
+		merg number;
+		--- where ever  basic pay is inserted then the dearness pay is calculated
+		--- and then merg is substituted to find the HRA by adding basic and dearness pay into merg
+		----------
+		pc varchar2(4);
+		pcc varchar2(4);
+		dn date;
+		dnn date;
+		ps_cd varchar2(4);
+		ps_cdd varchar2(4);
+		a varchar2(6);
+		b varchar2(6);
+		c varchar2(6);
+		d varchar2(6);
+		e varchar2(6);
+		f varchar2(6);
+		g varchar2(6);
+		h varchar2(6);
+		i varchar2(6);
+		j varchar2(6);
+		k varchar2(6);
+		
+		aa varchar2(6);
+		bb varchar2(6);
+		cc varchar2(6);
+		dd varchar2(6);
+		ee varchar2(6);
+		ff varchar2(6);
+		gg varchar2(6);
+		hh varchar2(6);
+		ii varchar2(6);
+		jj varchar2(6);
+		kk varchar2(6);
+		
+		ac varchar2(3);
+		acc varchar2(3);
+		acp_des varchar2(4);
+		acp_dess varchar2(4);
+		--acp=y declaration
+		ac_1 varchar2(4);
+		ac_11 varchar2(4);
+		bsss number;
+		rbsss number;
+		
+		xda number;
+		xhra number;
+		xdata number;
+		xgross number;
+		xdsgcd varchar2(4);
+		
+		
+		cursor c1 is 
+	 		select 	ps_idn,
+	 						ps_nm,
+	 						cm_bsc_py1,
+	 						grade_pay,
+	 						pcode, 
+	 						cm_dni,
+	 						ps_cdr_id,
+	            nvl(sr_acp_stts,'N')||nvl(sr_acp_stts2,'N')||nvl(sr_acp_stts3,'N'),
+	            decode((nvl(sr_acp_stts,'N')||nvl(sr_acp_stts2,'N')||nvl(sr_acp_stts3,'N')),
+	             		'YNN',ACP_DSGNTN,
+	             		'NYN',ACP_DSGNTN2,
+	             		'NNY',ACP_DSGNTN3,
+	             		DSGNTN_ID) ACP
+	         	from ags.prsnl_infrmtn_systm,
+	                ags.clms_dsgntn_py_mstr 
+	          where ps_cdr_id=dsgntn_id 
+	          			and cm_unt_cd=:clms_py_bll_hdr.unt 
+	          			and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+	          			and cm_rti_nrti=:clms_py_bll_hdr.rti_nrti 
+	          			and CM_clms_flg not in('F01','F06','F07','F08','F09','F10','F11','F12','F13')
+	          			and ps_flg='W' 
+	          			and sr_dt_of_rtrmnt>:cm_mnth_of_acnt
+	          order by ps_idn;
+	begin
+		open c1;
+		loop
+			fetch c1 into id,nm,bs,gp,pc,dn,ps_cd,ac,acp_des;
+			--message(id);
+			exit when c1% notfound;
+			idd:=id;
+			nmm:=nm;
+			bss:=bs;
+			gpp:=gp;
+			pcc:=pc;
+			dnn:=dn;
+			acc:=ac;   --acp status
+			acp_dess:=acp_des;
+			ps_cdd:=ps_cd;
+			-- ************************************************************************************************
+			-- Code changed - VSJ on 18.10.2013
+			-- ************************************************************************************************
+
+
+			xdsgcd := ps_cdd;
+			if (acc='YNN' or acc = 'NNY') then
+				-- if acp status 1 or acp status three are 'Y' 
+				-- change designation to ACP designation
+				xdsgcd := acp_dess;
+			end if;
+
+			-- get MIN pay, MAX pay and Grade Pay for that designation
+			select  nvl(PCA_MIN,0), nvl(PCA_MAX,0),nvl(PCA_GRADE_PAY,0) into a,b,c  
+			  from ags.clms_dsgntn_py_mstr 
+			  where  dsgntn_id=xdsgcd;
+
+			if ((to_char(dnn,'mm/rrrr'))=to_char(:cm_mnth_of_acnt,'mm/rrrr')) THEN
+				-- increment month
+				if (bss>=a) and (bss<=b) then 
+					bsss:=to_number(bss)+((to_number(bss)+to_number(gpp))*.03);
+					bsss:=rnd_ten_new(to_number(bsss));
+					merg:=bsss;
+				end if;
+
+			else
+				bsss:=to_number(bss);
+				merg:=bsss;
+			end if;
+			
+			
+			insert into ags.clms_erng_entry
+								(er_idn,er_nm,er_bsc_py,er_da,er_dpay,
+								er_hra,er_ca,er_cca,er_grss,er_gpf,
+								er_cghs,er_mnth_of_acnt,er_usr_id,er_auth,er_bll_id,
+								er_crtd_dt,er_cggis,er_lcnc_fee,er_pt,er_it,
+								er_it_srchr,er_rcvry_ttl,er_nt_py,er_pis_cdr,mlic_Fee,er_billno)
+	     	select a1.ps_idn,
+	     					a1.ps_nm,
+	     					--nvl(bsss,0),
+	     					a1.ps_pca_bsc_jan06,
+	     				--	nvl(round((merg+a1.grade_pay)*(d.da/100)),0),
+	     				 	nvl(round((a1.ps_pca_bsc_jan06)*(d.nda/100)),0),
+	     				  0,
+	     					--nvl(a1.grade_pay,0),
+	     					--0,
+	     					
+	     					/* Updated on 7.7.2017*/
+	     				-----	nvl(round((merg+a1.grade_pay)*(d.hra/100)),0),
+	     			--	case when (nvl(round((a1.ps_pca_bsc_jan06)*(8/100)),0)<1800) then 1800 else nvl(round((a1.ps_pca_bsc_jan06)*(8/100)),0) end, 
+	     			 -- decode ( (nvl(round((a1.ps_pca_bsc_jan06)*(8/100)),0)-1800)/abs(nvl(round((a1.ps_pca_bsc_jan06)*(8/100)),0)-1800),-1,nvl(round((a1.ps_pca_bsc_jan06)*(8/100)),0)),
+	     			 decode ( sign(nvl(round((a1.ps_pca_bsc_jan06)*(8/100)),0) - 1800),-1,1800,1, nvl(round((a1.ps_pca_bsc_jan06)*(8/100)),0),nvl(round((a1.ps_pca_bsc_jan06)*(8/100)),0)),
+	     			   	/* Updated on 7.7.2017*/
+	     			   	
+	     					nvl(a.ca_amnt,0),
+	     					nvl(round(nvl(a.ca_amnt,0)*((nvl(d.da,0))/100)),0),
+								--nvl(bsss,0)+nvl(round((merg+a1.grade_pay)*(d.da/100)),0)+
+	     					--	nvl(a1.grade_pay,0)+nvl(round((merg+a1.grade_pay)*(d.hra/100)),0)+
+	     					--	nvl(a.ca_amnt,0)+nvl(round(nvl(a.ca_amnt,0)*((nvl(d.da,0))/100)),0),
+	     				  a1.ps_pca_bsc_jan06+
+	     				  /* Updated on 7.7.2017*/
+	     					---nvl(round((merg+a1.grade_pay)*(d.hra/100)),0)+nvl(round((a1.ps_pca_bsc_jan06)*(d.nda/100)),0)+
+	     					nvl(round((a1.ps_pca_bsc_jan06)*(d.hra/100)),0)+nvl(round((a1.ps_pca_bsc_jan06)*(d.nda/100)),0)+
+	     					/* Updated on 7.7.2017*/
+	     					nvl(a.ca_amnt,0)+nvl(round(nvl(a.ca_amnt,0)*((nvl(d.da,0))/100)),0),
+	     					nvl(cm_gpf,0),
+	     					0,	--nvl(c.minamt,0) GPF,
+	     					:clms_py_bll_hdr.cm_mnth_of_acnt,
+	     					:clms_py_bll_hdr.usr,
+	     					'N',
+	     					:clms_py_bll_hdr.bll_id,
+	     					sysdate,0,0,0,0,0,0,0,ps_cdr_id,0,e.pbr_snrty 
+	     					--ps_cdr_id,pbr_snrty 
+	     	from ags.prsnl_infrmtn_systm a1,
+	     				ags.clms_dsgntn_py_mstr a, 
+	     				ags.clms_pay_mstr c,
+	     				ags.clms_hra_da_mstr d, 
+	     				ags.ker_pbr_snrty e
+	     	where  (a1.ps_cdr_id=a.dsgntn_id)  
+	     		and (nvl((merg+pca_grade_pay),0) between c.basic and c.max_basic 
+	     		and substr(c.paycode,1,1)='H') 
+	     		and a1.cm_unt_cd=:clms_py_bll_hdr.unt
+	     		and a1.cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+	     		and a1.cm_rti_nrti=:clms_py_bll_hdr.rti_nrti 
+	     		AND a1.ps_idn=idd
+					--and grp<>'A'
+					and a1.CM_clms_flg not in('F01','F06','F07','F08','F09','F10','F11','F12','F13') 
+					and a1.ps_flg='W' 
+					and sr_dt_of_rtrmnt>:cm_mnth_of_acnt 
+					and a1.ps_idn = e.pbr_idn and a1.cm_unt_cd in ('U030','U032','U033','U130','U132','U133');
+	     -- and a1.ps_clms_flg<>'Y';
+
+		 
+						
+
+			insert into ags.clms_erng_entry
+								(er_idn,er_nm,er_bsc_py,er_da,er_dpay,
+								er_hra,er_ca,er_cca,er_grss,er_gpf,
+								er_cghs,er_mnth_of_acnt,er_usr_id,er_auth,er_bll_id,
+								er_crtd_dt,er_cggis,er_lcnc_fee,er_pt,er_it,
+								er_it_srchr,er_rcvry_ttl,er_nt_py,er_pis_cdr,mlic_Fee,er_billno)
+	     	select a1.ps_idn,
+	     					a1.ps_nm,
+	     					--nvl(bsss,0),
+	     					a1.ps_pca_bsc_jan06,
+	     				--	nvl(round((merg+a1.grade_pay)*(d.da/100)),0),
+	     				 	nvl(round((a1.ps_pca_bsc_jan06)*(d.nda/100)),0),
+	     				  0,
+	     					--nvl(a1.grade_pay,0),
+	     					--0,
+	     					
+	     					/* Updated on 7.7.2017*/
+	     				-----	nvl(round((merg+a1.grade_pay)*(d.hra/100)),0),
+	     			   ----decode ( nvl(round((a1.ps_pca_bsc_jan06)*(16/100)),0)<3600,True,3600,nvl(round((a1.ps_pca_bsc_jan06)*(16/100)),0)),
+	     			   decode ( sign(nvl(round((a1.ps_pca_bsc_jan06)*(16/100)),0) - 3600),-1,3600,1, nvl(round((a1.ps_pca_bsc_jan06)*(16/100)),0),nvl(round((a1.ps_pca_bsc_jan06)*(16/100)),0)),
+	     			   	/* Updated on 7.7.2017*/
+	     			   	
+	     					nvl(a.ca_amnt,0),
+	     					nvl(round(nvl(a.ca_amnt,0)*((nvl(d.da,0))/100)),0),
+								--nvl(bsss,0)+nvl(round((merg+a1.grade_pay)*(d.da/100)),0)+
+	     					--	nvl(a1.grade_pay,0)+nvl(round((merg+a1.grade_pay)*(d.hra/100)),0)+
+	     					--	nvl(a.ca_amnt,0)+nvl(round(nvl(a.ca_amnt,0)*((nvl(d.da,0))/100)),0),
+	     				  a1.ps_pca_bsc_jan06+
+	     				  /* Updated on 7.7.2017*/
+	     					---nvl(round((merg+a1.grade_pay)*(d.hra/100)),0)+nvl(round((a1.ps_pca_bsc_jan06)*(d.nda/100)),0)+
+	     					nvl(round((a1.ps_pca_bsc_jan06)*(d.hra/100)),0)+nvl(round((a1.ps_pca_bsc_jan06)*(d.nda/100)),0)+
+	     					/* Updated on 7.7.2017*/
+	     					nvl(a.ca_amnt,0)+nvl(round(nvl(a.ca_amnt,0)*((nvl(d.da,0))/100)),0),
+	     					nvl(cm_gpf,0),
+	     					0,	--nvl(c.minamt,0) GPF,
+	     					:clms_py_bll_hdr.cm_mnth_of_acnt,
+	     					:clms_py_bll_hdr.usr,
+	     					'N',
+	     					:clms_py_bll_hdr.bll_id,
+	     					sysdate,0,0,0,0,0,0,0,ps_cdr_id,0,e.pbr_snrty 
+	     					--ps_cdr_id,pbr_snrty 
+	     	from ags.prsnl_infrmtn_systm a1,
+	     				ags.clms_dsgntn_py_mstr a, 
+	     				ags.clms_pay_mstr c,
+	     				ags.clms_hra_da_mstr d, 
+	     				ags.ker_pbr_snrty e
+	     	where  (a1.ps_cdr_id=a.dsgntn_id)  
+	     		and (nvl((merg+pca_grade_pay),0) between c.basic and c.max_basic 
+	     		and substr(c.paycode,1,1)='H') 
+	     		and a1.cm_unt_cd=:clms_py_bll_hdr.unt
+	     		and a1.cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+	     		and a1.cm_rti_nrti=:clms_py_bll_hdr.rti_nrti 
+	     		AND a1.ps_idn=idd
+					--and grp<>'A'
+					and a1.CM_clms_flg not in('F01','F06','F07','F08','F09','F10','F11','F12','F13') 
+					and a1.ps_flg='W' 
+					and sr_dt_of_rtrmnt>:cm_mnth_of_acnt 
+					and a1.ps_idn = e.pbr_idn and a1.cm_unt_cd not in ('U030','U032','U033','U130','U132','U133');
+	     -- and a1.ps_clms_flg<>'Y';
+
+			
+		
+			
+			
+			-- ************************************************************************************************
+			-- ************************************************************************************************
+		end loop;
+		close c1;
+	end;
+	
+	commit;
+
+	-------------------------------------------------------NEWLY ADDED ON 16-09-2008
+	-- update Transport Allowance and DA on TA
+/*	declare
+		i varchar2(4);
+		ii varchar2(4);
+		n number;
+		nn number;
+		cc number; ccc number;
+		cursor c1 is 
+			select ps_idn, CM_TA_RQRD_FLG, ps_floor,unit
+			--	decode(ca_amnt,400,800,ca_amnt) new_ca,
+			--	nvl(round((decode(ca_amnt,400,800,ca_amnt))*(d.da/100)),0) new_cca
+			from
+				ags.prsnl_infrmtn_systm,
+				clms_dsgntn_py_mstr,
+				clms_erng_entry,
+				clms_hra_da_mstr d 
+			where
+				ps_cdr_id=dsgntn_id 
+				and er_bsc_py>=7440 
+				and er_idn=ps_idn
+				and pca_grade_pay between 600 and 4201
+				and	cm_unt_cd=:clms_py_bll_hdr.unt
+				and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+				and cm_rti_nrti=:clms_py_bll_hdr.rti_nrti
+			union
+			select ps_idn,1600 new_ca,round(1600*(d.da/100)) new_cca
+			from
+				ags.prsnl_infrmtn_systm,
+				clms_erng_entry,
+				clms_hra_da_mstr d 
+			where
+				er_idn=ps_idn
+				------code changed on 13-12-2016
+				--and er_dpay>=5400 
+				and grade_pay>=5400 
+				and cm_unt_cd=:clms_py_bll_hdr.unt
+				and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+				and cm_rti_nrti=:clms_py_bll_hdr.rti_nrti;
+	begin
+	
+		open c1;
+		loop
+			fetch c1 into i,n,cc;
+			exit when c1% notfound;
+			ii:=i;
+			nn:=n;ccc:=cc;
+			 update ags.clms_erng_entry set er_ca=nn ,er_cca=ccc where er_idn=ii;
+		end loop;
+	end;
+	
+*/
+	-------------------------------newly added-------------------------------------------
+	-- Give double TA to physically handicaped officials
+/*	declare
+		i varchar2(4);
+		ii varchar2(4);
+		n varchar2(1);
+		nn varchar2(1);v number;
+		vv number;
+		cg number; gp number;
+		cursor c1 is 
+			select ps_idn,NVL(ps_ph_stts,'N') 
+			from ags.prsnl_infrmtn_systm  
+			where cm_unt_cd=:clms_py_bll_hdr.unt
+				and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+				and cm_rti_nrti=:clms_py_bll_hdr.rti_nrti 
+				and  ps_ph_stts='Y' 
+				and sr_dt_of_rtrmnt>:cm_mnth_of_acnt;
+	begin
+		open c1;
+		loop
+			fetch c1 into i,n;
+			exit when c1% notfound;
+			ii:=i;
+			nn:=n;
+			select er_ca*2 into v from clms_erng_entry where er_idn=ii;
+			vv:=v;
+			if v<1000 then
+				vv:=1000;
+				
+			end if;
+			update ags.clms_erng_entry set er_ca=vv where er_idn=ii;
+			declare
+				daa number;
+			begin
+				select da into daa from clms_hra_da_mstr ;
+				update ags.clms_erng_entry set er_cca=round(er_ca*daa/100) where er_idn=ii;
+			 end;
+		end loop;
+	end;
+
+	*/
+	--cghs rates
+
+	declare
+		
+		i varchar2(4);
+		ii varchar2(4);
+		n varchar2(5);
+		dc varchar2(4);
+		nn varchar2(5);
+		v number;
+		vv number;
+		cg number; gp number;np number;
+		cursor c1 is 
+			select ps_idn,NVL(CM_CGHS_FLG,'CG01'), ps_cdr_id 
+			from ags.prsnl_infrmtn_systm  
+			where cm_unt_cd=:clms_py_bll_hdr.unt
+				and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+				and cm_rti_nrti=:clms_py_bll_hdr.rti_nrti 
+				and NVL(CM_CGHS_FLG,'CG01') ='CG02' 
+				and sr_dt_of_rtrmnt>:cm_mnth_of_acnt;
+	begin
+		open c1;
+		loop
+			fetch c1 into i,n, dc;
+			exit when c1% notfound;
+			ii:=i;
+			nn:=n;
+		 	--select er_dpay into gp from clms_erng_entry where er_idn=ii;  ---7th pay revision
+		 	--Revised rates of cghs from Feb 2017 onwards
+		 	--select grade_pay into gp from prsnl_infrmtn_systm where ps_idn=ii; 
+		 	 select ps_floor into gp from prsnl_infrmtn_systm where ps_idn=ii; 
+			/*begin
+				SELECT ER_CGHS INTO CG FROM CLMS_ERNG_YRFL WHERE ER_IDN=II AND
+	 		ER_MNTH_OF_ACNT='01/08/2008';
+			exception
+				when no_data_found then cg:=0;
+				end;
+			0 - 1651	50
+			1800 - 2801 125
+			4200 - 4201 225
+			4600 - 6601 325
+			7600 - 50000 500	
+				
+			
+			if gp = 0 then
+				if dc = 'DA00' then -- PAG
+					cg := 500;
+				end if;
+			elsif gp <=1650 then 
+				cg:=50;
+			elsif gp between 1800 and 2800 then 
+				cg:=125;
+			elsif gp= 4200 then 
+				cg:=225;
+			elsif gp between 4600 and 6600 then 
+				cg:=325;
+			elsif gp>=7600 then 
+				cg:=500;
+			end if;
+				*/
+				if gp in (1,2,3,4,5) then
+			--	if dc = 'DA00' then -- PAG
+					cg := 250;
+			--	end if;
+				elsif gp = 6 then 
+					cg:=450;
+				elsif gp in (7,8,9,10,11) then 
+					cg:=650;
+				else 
+					cg:=1000;
+				end if;
+			
+			update ags.clms_erng_entry set er_cghs=nvl(cg,0) where er_idn=ii;
+		end loop;
+	end;
+
+	
+	commit;
+
+--message('CGHS Updated');	
+	---------------------------------------------------------------END ------------------SURESH
+	-----newly added 30102004
+	-- Make TA & DA on TA 0 for those who are not eligible
+	declare
+		i varchar2(4);
+		ii varchar2(4);
+		n varchar2(1);
+		nn varchar2(1);
+		cursor c1 is 
+			select ps_idn,NVL(cm_ta_rqrd_flg,'N') 
+			from ags.prsnl_infrmtn_systm  
+			where cm_unt_cd=:clms_py_bll_hdr.unt
+				and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+				and cm_rti_nrti=:clms_py_bll_hdr.rti_nrti 
+				and cm_ta_rqrd_flg='N';
+	begin
+		open c1;
+		loop
+			fetch c1 into i,n;
+			exit when c1% notfound;
+			ii:=i;
+			nn:=n;
+			update ags.clms_erng_entry set er_ca=0,er_cca=0 where er_idn=ii;
+		end loop;
+	end;
+	
+
+	commit;
+	
+/*Those who are eligible for ta*/	
+	declare
+		i varchar2(4);
+		ii varchar2(4);
+		n varchar2(1);
+		nn varchar2(1);
+		u varchar(10);
+		unit varchar(10);
+		f varchar(3);
+		floor varchar(3);
+		TA number :=0;
+		ph_st varchar(1);
+		phy varchar(1);
+		dta number;
+		gp number;--21_7_17
+		dap numeric(10);
+		b_pay1 number;
+		b_pay number;
+		
+		cursor c1 is 
+			select ps_idn,NVL(cm_ta_rqrd_flg,'N'),cm_unt_cd,ps_floor,ps_ph_stts,ps_pca_bsc_jan06 
+			from ags.prsnl_infrmtn_systm  
+			where cm_unt_cd=:clms_py_bll_hdr.unt
+				and cm_chq_pd=:clms_py_bll_hdr.csh_chq 
+				and cm_rti_nrti=:clms_py_bll_hdr.rti_nrti 
+				and cm_ta_rqrd_flg='Y';
+	begin
+		open c1;
+		loop
+			fetch c1 into i,n,u,f,ph_st,b_pay1;
+			exit when c1% notfound;
+			ii:=i;
+			nn:=n;
+			unit:=u;
+			gp:=f;
+			phy:=ph_st;
+			b_pay:=b_pay1;
+if gp in (1,2) then
+	
+	if (unit in('U141','U142','U143')) or (ii in('2159','1626','1707')) then
+		if b_pay>=24200 then
+			TA:=3600;
+		else
+		 TA := 1350;
+		end if;
+			
+	
+	else
+		if b_pay>=24200 then
+			TA:=1800;
+		else
+			TA := 900;
+		end if;
+			
+	end if;	
+	
+	
+elsif gp in (3,4,5,6,7,8) then 
+	if (unit in('U141','U142','U143')) or (ii in('2159','1626','1707','1200')) then       --4 employees from GSSA hardcoded to receive Cochin TA KM16_8_17
+	  TA := 3600;
+	else
+		TA := 1800;
+	end if;	
+elsif gp in (9,10,11,12,13,14) then  
+	if (unit in('U141','U142','U143')) or (ii in('2159','1626','1707','1200'))then
+	  TA := 7200;
+	else
+		TA := 3600;
+	end if;
+else
+	if (unit in('U141','U142','U143')) or (ii in('2159','1626','1707','1200'))then
+	  TA := 7200;
+	else
+		TA := 15750;
+	end if;
+		
+end if;
+/*Added on 10.7.2017*/		
+			
+if phy = 'Y' then
+/*Added on 10.7.2017*/
+	ta := greatest(ta * 2,2250);
+--	ta := greatest(ta * 2,1000);
+/*Added on 10.7.2017*/
+end if;
+select nda into dap from clms_hra_da_mstr;
+dta:=round(ta*dap/100);
+			update ags.clms_erng_entry set er_ca=TA,er_cca=dta where er_idn=ii;
+		end loop;
+	end;
+	
+
+	commit;
+	
+	
+	-------------------------------newly added-------------------------------------------
+	
+	--update basic pay
+	--suresh
+	-- In case of Increment
+	declare
+		 a varchar2(4);
+		 b number;
+		 c number;
+		 aa varchar2(4);
+		 bb number;
+		 cc number;
+		 cursor c1 is 
+			SELECT A.ER_IDN,C.cm_BSC_PY,A.ER_BSC_PY
+			FROM ags.CLMS_ERNG_ENTRY A,
+				ags.prsnl_infrmtn_systm C 
+			WHERE A.ER_IDN=C.PS_IDN 
+				AND C.cm_BSC_PY<A.er_BSC_PY 
+				and A.ER_BLL_ID=:BLL_ID;
+	begin
+	 	open c1;
+		Loop
+			fetch c1 into a,b,c;
+			exit when c1% notfound;
+			aa:=a;
+			bb:=b;
+			cc:=c;
+			--TO BE UNCOMMENTED
+			--modified on 21-sep-2005
+			update ags.pis set cm_bsc_py=cc
+			--,ps_dpay=round(cc*.5,0) 
+			where ps_idn=aa;
+			 --UPDATE ags.PRSNL_INFRMTN_SYSTM SET CM_BSC_PY=CC,ps_dpay=round(cc*.5,0) WHERE PS_IDN=aa;
+	 	end loop;
+		close c1;
+	end;
+
+	---------------------CHECK-B------------------------------------------cghs=0
+	----('cghs=0');
+	/*  COMMENTED BY VSJ where condition changed (nvl added)
+	  update ags.clms_erng_entry a set a.er_cghs=0 where a.er_idn=
+	(select b.PS_IDN from ags.PRSNL_INFRMTN_SYSTM b
+	where NVL(b.CM_CGHS_FLG,'CG01')='CG01' and b.PS_idn=a.er_idn) and er_bll_id=:bll_id;
+	---------------------------------------new new new new new new new
+	*/
+	--CGGIS,LICENCE,PT,IT,IT_SURCHR UPDATION from regular recovery details file
+	declare
+		d varchar2(4);
+		dd varchar2(4);
+		cg number;
+		cgg number;
+		lc number;
+		lcc number;
+		pt number;
+		ptt number;
+		it number;
+		itt number;
+		its number;
+		itss number;
+		ti number; tii number;
+		gp number;
+		gpp number;
+		cursor c1 is 
+			select rg_idn,rg_cggis,rg_lcnc_fee,rg_pt,rg_it,rg_it_srchr,rg_GPF,rg_tierii 
+			from ags.clms_rglr_rcvry_dtls_mstr ;
+	begin
+		open c1;
+		loop
+			fetch c1 into d,cg,lc,pt,it,its,gp,ti;
+			exit when c1% notfound;
+			dd:=d;
+			cgg:=cg;
+			gpp:=gp;
+			lcc:=lc;
+			ptt:=pt;
+			itt:=it; 
+			itss:=its;tii:=ti;
+			update ags.clms_erng_entry set er_cggis=cgg,er_lcnc_fee=lcc,
+					--newly added 25102004
+					--er_pt=ptt,
+					er_pt=ptt,er_it=itt,er_it_srchr=itss,
+					er_gpf=gpp,tierii=tii
+			where er_idn=dd and er_bll_id=:bll_id;
+		end loop;
+		close c1;
+	end;
+	commit;
+			
+	----
+	
+	--hra=0 when licence fee is not null
+	update ags.clms_erng_entry 
+		set er_hra=0 
+		where er_bll_id=:bll_id
+			and nvl(er_lcnc_fee,0) <>0 ;
+	
+	--newly added 13102004
+	update ags.clms_erng_entry 
+		set er_hra=0 
+		where er_bll_id=:bll_id 
+		and er_idn in
+			(	
+				select ps_idn 
+				from ags.prsnl_infrmtn_systm 
+				where cm_accmmdtn='Y'
+			);
+		
+	----------------------------------------------------------------------------
+	--------('hra=0 completed');
+	
+	------------------------------------------------------------------------------
+	
+	/*--- New professional  pickup from master
+	declare
+		aidno varchar2(4);
+		mnth date;
+		mnth1 date;
+		grsspy number;
+		inc number;
+		ptt number;
+		pinst number;
+		grpp varchar2(1);
+		cursor c1 is select er_idn,er_mnth_of_acnt,grp from
+		ags.clms_erng_entry,ags.clms_dsgntn_py_mstr
+			where er_pis_cdr=DSGNTN_ID and er_bll_id=:bll_id;
+	begin
+		open c1;
+		loop
+			fetch c1 into aidno,mnth,grpp;
+			exit when c1% notfound;
+			if to_char(mnth,'mm')between '04' and '09' then
+				select to_date('01/03/'||to_char(mnth,'yyyy')) into mnth1 from dual;
+			else
+				if to_char(mnth,'mm') in('10','11','12') then
+					select to_date('01/09/'||to_char(mnth,'yyyy')) into mnth1 from dual;
+				else
+					select add_months(to_date('01/09/'||to_char(mnth,'yyyy')),-12) into mnth1 from dual;
+				end if;
+			end if;
+			begin
+				select er_grss into grsspy 
+					from ags.clms_erng_yrfl 
+					where er_idn=aidno
+						and er_mnth_of_acnt=mnth1;
+				inc:=grsspy*6;
+				select minamt,pt_inst into ptt,pinst 
+					from clms_pay_mstr 
+					where inc between basic and max_basic 
+					and paytyp like 'PT%';
+				if grpp='A' then
+					if to_char(mnth,'mm') in ('03','09') then
+						update ags.clms_erng_entry set er_pt=ptt where er_idn=aidno;
+					end if;
+				else
+					if to_char(mnth,'mm') in ('03','09') then
+						update ags.clms_erng_entry set er_pt=ptt-(pinst*5) where er_idn=aidno;
+					else
+						update clms_erng_entry set er_pt=pinst where er_idn=aidno;
+					end if;
+				end if;
+				exception when no_data_found then null;
+			end;
+		end loop;
+		close c1;
+	end;
+	COMMIT;
+	*/
+		
+		
+	declare
+		a number;
+	begin
+		select count(*) into a from ags.clms_erng_entry where er_bll_id=:bll_id;
+		----
+		--MESSAGE(a||'members inserted');
+	end;
+		-----------------****************************************----------------------------------------------------- 
+			  
+		--SPECIAL PAY/PERSONAL PAY ENTRY
+		--NEWLY ADDED FOR DEPUTATION ALLOWANCE AUTOMATION ON 06-11-2004 BY SURESH
+		--declare 
+		--MESSAGE('deputation procedure starts');
+		AGS.deputaion_allowance_proc(:clms_py_bll_hdr.csh_chq,:clms_py_bll_hdr.unt,:clms_py_bll_hdr.rti_nrti);
+		COMMIT;
+		
+		-------------------------------------------------------------------------------------------------------
+
+		
+	declare
+		a varchar2(4);  --sp_idn not null
+		b varchar2(11);  --sp_bll_id
+		c date;         --month
+		d varchar2(3);   --sp_py-cd
+		e number;      --sp_py_amnt
+		f varchar2(15);  --user
+		g date;   --sp_crtd_dt
+		aa varchar2(4);  --sp_idn not null
+		bb varchar2(11);  --sp_bll_id
+		cc date;         --month
+		dd varchar2(3);   --sp_py-cd
+		ee number;      --sp_py_amnt
+		ff varchar2(15);  --user
+		gg date;   --sp_crtd_dt
+		cursor c1 is 
+			select er_idn,er_bll_id 
+			from ags.clms_erng_entry 
+			where er_bll_id=:clms_py_bll_hdr.bll_id;
+
+	begin
+
+		open c1;
+		loop
+
+			fetch c1 into a,b;
+											--	message('hiii12');
+						--	message(a,b);
+			exit when c1% notfound;
+			aa:=a;
+			bb:=b;
+	
+							----(aa,bb);
+			insert into ags.clms_spp_entry(sp_idn,sp_py_cd,sp_py_amnt,
+				sp_mnth_of_acnt,sp_usr_id,sp_bll_id,sp_crtd_dt) 
+			select idno,tycode,nvl(spamount,0),
+				:clms_py_bll_hdr.cm_mnth_of_acnt,
+				:clms_py_bll_hdr.usr,:clms_py_bll_hdr.bll_id,sysdate 
+			from AGS.clms_sp_snctn_mstr
+			where spn_unt_cd=substr(bb,4,4) 
+				and idno=aa 
+				and NVL(spamount,0)>0 
+			--modified as per IT objection
+				and mnth_flg='Y' 
+				and ((mnth_from is null) or (mnth_to is null)
+						or TO_DATE(TO_CHAR(:clms_py_bll_hdr.cm_mnth_of_acnt,'DD-MON-YY')) between mnth_from and mnth_to);
+			
+											
+		end loop;
+		close c1;
+	end;
+				
+--message('Special Pay Updated');	
+		--------------------------------------------------------------------------
+		--
+		--MESSAGE('SP / PP INSERTED ! PRESS ENTER TO CONTINUE!!!');
+			   
+		--
+		--MESSAGE('RECOVERY STARTED');
+	declare
+		a varchar2(4);  
+		aa varchar2(4);
+		b varchar2(11);  --er_bll_id
+		bb varchar2(11);
+		cursor c1 is select er_idn,er_bll_id from ags.clms_erng_entry where
+		er_bll_id=:clms_py_bll_hdr.bll_id;
+
+	begin
+
+		open c1;
+		loop
+			fetch c1 into a,b;
+			exit when c1% notfound;
+			aa:=a;
+			bb:=b;
+			insert into ags.clms_rcvry_entry (rc_idn,rc_bll_id,rc_mnth_of_acnt,
+				rc_rcvry_cd,rc_crrnt_instlmnt,rc_ttl_instlmnt,rc_rcvry_amnt,rc_usr_id,
+				rc_crtd_dt) 
+			select rd_idn,bb,:cm_mnth_of_acnt,rd_rcvry_cd,NVL(rd_crrnt_instlmnt,0)+1,
+				rd_ttl_instlmnt,rd_rcvry_amnt,:usr,sysdate 
+			from ags.clms_rcvry_dtls_mstr 
+			where rd_idn=aa 
+				and nvl(Rd_CRRNT_INSTLMNT,0)>=0 
+				and nvl(Rd_CRRNT_INSTLMNT,0)+1<=nvl(Rd_TTL_INSTLMNT,0) 
+				and rd_clsd_flg='O' 
+				and rd_rcvry_cd not in('IPL','ICG')
+				and (
+						(	to_DATE('01-'||TO_CHAR(sysdate,'MON-YY')) BETWEEN  
+							to_char(TO_DATE(rc_rcvry_strt_dt),'DD-MON-RR') AND to_char(TO_DATE(rc_rcvry_end_dt),'DD-MON-RR')
+						)
+						OR rc_rcvry_strt_dt is null 
+						--added  to avoid records being skipped for  entering end date  as blanks  -- on 01/07/2014
+						OR rc_rcvry_end_dt is null
+					);
+
+
+		end loop;
+		close c1;
+	end;
+	commit;
+
+		-----------------------------------------------------------------------------
+		--
+		--	message('hiii8');
+	
+	declare
+		a varchar2(4);  
+		aa varchar2(4);
+		b varchar2(5);  --rc_rcvry_cd
+		bb varchar2(5);
+		i number;
+		ii number;
+		m date;
+		mm date;
+		cursor c1 is select rc_idn,rc_rcvry_cd,rc_crrnt_instlmnt,rc_mnth_of_acnt
+		from ags.clms_rcvry_entry where
+		rc_bll_id=:clms_py_bll_hdr.bll_id;
+
+	begin
+
+		open c1;
+		loop
+			fetch c1 into a,b,i,m;
+			exit when c1% notfound;
+			aa:=a;
+			bb:=b;
+			ii:=i;
+			mm:=m;
+			--TO BE UNCOMMENTED
+			-- update ags.clms_rcvry_dtls_mstr set rd_crrnt_instlmnt=ii,rd_crtd_dt=mm,rd_usr_id=:clms_py_bll_hdr.usr
+			-- where rd_idn=aa AND rd_rcvry_cd=bb and rd_clsd_flg='O';  
+			----('I AM HERE');
+		end loop;
+		close c1;
+--MESSAGE('Recovery Total');
+	end;
+		
+		
+		-------------------------------------------------------------------------------------------
+		--PLI INSERTION
+	declare
+		a varchar2(4);  
+		aa varchar2(4);
+		b varchar2(11);  --er_bll_id
+		bb varchar2(11);
+		cursor c1 is select er_idn,er_bll_id from ags.clms_erng_entry where
+		er_bll_id=:clms_py_bll_hdr.bll_id;
+
+	begin
+
+		open c1;
+		loop
+			fetch c1 into a,b;
+			exit when c1% notfound;
+			aa:=a;
+			bb:=b;
+			insert into ags.clms_rcvry_entry 
+				(rc_idn,rc_bll_id,rc_mnth_of_acnt,
+				rc_rcvry_cd,rc_crrnt_instlmnt,rc_ttl_instlmnt,rc_rcvry_amnt,rc_usr_id,
+				rc_crtd_dt) 
+			select 
+				rd_idn,bb,:cm_mnth_of_acnt,rd_rcvry_cd,rd_crrnt_instlmnt,
+				rd_ttl_instlmnt,rd_rcvry_amnt,:usr,sysdate 
+			from ags.clms_rcvry_dtls_mstr 
+			where
+				rd_idn=aa and rd_clsd_flg='O' and rd_rcvry_cd IN('IPL','ICG');
+			--     and (to_DATE('01/'||TO_CHAR(sysdate,'MM/RRRR'))
+			--BETWEEN  to_char(TO_DATE(rc_rcvry_strt_dt),'DD/MM/RRRR') AND
+			-- to_char(TO_DATE(rc_rcvry_end_dt),'DD/MM/RRRR'));
+			--(to_char(rc_rcvry_strt_dt,'MM/RRRR')<=TO_CHAR(sysdate,'MM/RRRR') or rc_rcvry_strt_dt is null);;
+
+		end loop;
+		close c1;
+	end;
+		
+		
+		--RECOVERY INSERTION END
+		------------------------------------------------------------------------------------------
+		
+		
+		---------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-----------------
+		--here basic pay and da (events calculation0 to affect the gross is d
+		----('events updated');
+	declare
+		cursor c1 is 
+			select ev_idn,er_bsc_py,ev_mnth_of_acnt,da,
+			to_number(substr(last_day(ev_mnth_of_acnt),1,2)) days,
+			to_number(sum(nvl(ev_evnt_dys,0))) mnth_days,
+			round((er_bsc_py*(to_number(substr(last_day(ev_mnth_of_acnt),1,2))
+				-sum(nvl(ev_evnt_dys,0))))/(to_number(substr(last_day(ev_mnth_of_acnt),1,2)))) new_bsc,
+			round((er_dpay*(to_number(substr(last_day(ev_mnth_of_acnt),1,2))
+				-sum(nvl(ev_evnt_dys,0))))/(to_number(substr(last_day(ev_mnth_of_acnt),1,2)))) new_gpay,
+			round((round((er_bsc_py*(to_number(substr(last_day(ev_mnth_of_acnt),1,2))
+				-sum(nvl(ev_evnt_dys,0))))/(to_number(substr(last_day(ev_mnth_of_acnt),1,2))))*(.01*da))) new_da
+		from AGS.clms_evnts,
+			ags.clms_erng_entry,
+			ags.clms_hra_da_mstr 
+		where er_idn=ev_idn 
+			and er_mnth_of_acnt=ev_mnth_of_acnt 
+			and er_bll_id=:bll_id
+		group by ev_idn,er_bsc_py,er_dpay,ev_mnth_of_acnt,da ;
+		id varchar2(4);
+		idd varchar2(4);
+		bsc number;
+		bscc number;
+		mn date;
+		mnn date;
+		dda number;
+		ddaa number;
+		ldy number;
+		ldyy number;
+		dys number(5,2);
+		dyss number(5,2);
+		nba number;
+		nbaa number;
+		nda number;
+		ndaa number;
+		ngp number;
+		--- ADDED FOR DEARNESS PAY
+		newdp number;
+		newdafordp number;
+		-----
+	begin
+		open c1;
+		loop
+			fetch c1 into id,bsc,mn,dda,ldy,dys,nba,ngp,nda;
+			exit when c1% notfound;
+			idd:=id;
+			bscc:=bsc;
+			mnn:=mn;
+			ddaa:=dda;
+			ldyy:=ldy;
+			dyss:=dys;
+			nbaa:=nba;
+			ndaa:=nda;
+			newdp:=ngp;
+			-- select round(nba*d_pay/100,0) into newdp from ags.clms_hra_da_mstr; 
+			select round((nba+newdp)*da/100,0) into newdafordp from ags.clms_hra_da_mstr;
+
+			update ags.clms_erng_entry set er_bsc_py=nbaa,er_dpay=newdp,er_da=newdafordp where er_idn=idd and
+			er_bll_id=:bll_id;
+		end loop;
+		close c1;
+	end;
+
+
+
+	----for DNN and ANR hra ,cca and ca shall be reduced proportionately
+	--HRA
+	----('events updated --suresh');
+	declare
+		cursor c1 is select ev_idn,er_hra,ev_mnth_of_acnt,
+		to_number(substr(last_day(ev_mnth_of_acnt),1,2)) days,
+		to_number(sum(nvl(ev_evnt_dys,0))) mnth_days,
+		round((er_hra*(to_number(substr(last_day(ev_mnth_of_acnt),1,2))
+		-sum(nvl(ev_evnt_dys,0))))/(to_number(substr(last_day(ev_mnth_of_acnt),1,2)))) new_hra
+		from AGS.clms_evnts,ags.clms_erng_entry where er_idn=ev_idn 
+		and er_mnth_of_acnt=ev_mnth_of_acnt and er_bll_id=:bll_id 
+		and ev_evnt='DNN' OR EV_EVNT='ANR'
+		group by ev_idn,er_hra,ev_mnth_of_acnt ;
+		id varchar2(4);
+		idd varchar2(4);
+		bsc number;
+		bscc number;
+		mn date;
+		mnn date;
+		ldy number;
+		ldyy number;
+		dys number(5,2);
+		dyss number(5,2);
+		nba number;
+		nbaa number;
+	begin
+		open c1;
+		loop
+			fetch c1 into id,bsc,mn,ldy,dys,nba;
+			exit when c1% notfound;
+			idd:=id;
+			bscc:=bsc;
+			mnn:=mn;
+			ldyy:=ldy;
+			dyss:=dys;
+			nbaa:=nba;
+
+			update ags.clms_erng_entry 
+			set er_hra=nbaa 
+			where er_idn=idd and er_bll_id=:bll_id;
+		end loop;
+		close c1;
+	end;
+
+	----------------------------****************************--------------------------------
+	----('events updated --sureshh');
+	--CA
+	declare
+		cursor c1 is 
+		select ev_idn,er_ca,ev_mnth_of_acnt,
+			to_number(substr(last_day(ev_mnth_of_acnt),1,2)) days,
+			to_number(sum(nvl(ev_evnt_dys,0))) mnth_days,
+			round((er_ca*(to_number(substr(last_day(ev_mnth_of_acnt),1,2))
+				-sum(nvl(ev_evnt_dys,0))))/(to_number(substr(last_day(ev_mnth_of_acnt),1,2)))) new_ca
+		from ags.clms_evnts,ags.clms_erng_entry 
+		where er_idn=ev_idn 
+			and er_mnth_of_acnt=ev_mnth_of_acnt and er_bll_id=:bll_id 
+			and ev_evnt='DNN' OR EV_EVNT='ANR'
+		group by ev_idn,er_ca,ev_mnth_of_acnt;
+		id varchar2(4);
+		idd varchar2(4);
+		bsc number;
+		bscc number;
+		mn date;
+		mnn date;
+		ldy number;
+		ldyy number;
+		dys number(5,2);
+		dyss number(5,2);
+		nba number;
+		nbaa number;
+	begin
+		open c1;
+		loop
+			fetch c1 into id,bsc,mn,ldy,dys,nba;
+			exit when c1% notfound;
+			idd:=id;
+			bscc:=bsc;
+			mnn:=mn;
+			ldyy:=ldy;
+			dyss:=dys;
+			nbaa:=nba;
+			update ags.clms_erng_entry 
+			set er_ca=nbaa 
+			where er_idn=idd and er_bll_id=:bll_id;
+		end loop;
+		close c1;
+	end;
+
+
+
+	----('events updated  sureshhh');
+	--CCA
+	declare
+		cursor c1 is 
+			select ev_idn,er_cca,ev_mnth_of_acnt,
+				to_number(substr(last_day(ev_mnth_of_acnt),1,2)) days,
+				to_number(sum(nvl(ev_evnt_dys,0))) mnth_days,
+				round((er_cca*(to_number(substr(last_day(ev_mnth_of_acnt),1,2))
+					-sum(nvl(ev_evnt_dys,0))))/(to_number(substr(last_day(ev_mnth_of_acnt),1,2)))) new_cca
+			from ags.clms_evnts,ags.clms_erng_entry 
+			where er_idn=ev_idn 
+				and er_mnth_of_acnt=ev_mnth_of_acnt and er_bll_id=:bll_id 
+				and ev_evnt='DNN' OR EV_EVNT='ANR'
+			group by ev_idn,er_cca,ev_mnth_of_acnt;
+		id varchar2(4);
+		idd varchar2(4);
+		bsc number;
+		bscc number;
+		mn date;
+		mnn date;
+		ldy number;
+		ldyy number;
+		dys number(5,2);
+		dyss number(5,2);
+		nba number;
+		nbaa number;
+	begin
+		open c1;
+		loop
+			fetch c1 into id,bsc,mn,ldy,dys,nba;
+			exit when c1% notfound;
+			idd:=id;
+			bscc:=bsc;
+			mnn:=mn;
+			ldyy:=ldy;
+			dyss:=dys;
+			nbaa:=nba;
+			update ags.clms_erng_entry set er_cca=nbaa where er_idn=idd and
+			er_bll_id=:bll_id;
+		end loop;
+		close c1;
+	end;
+	--COMMIT;
+	--EVENTS PROPORTIONATE AMOUNT FOR PP AND SP AMOUNT
+	declare
+		id varchar2(4);
+		idd varchar2(4);
+		mon date;
+		monn date;
+		sp varchar2(3);
+		spp varchar2(3);
+		sp_amn number;
+		sp_amnn number;
+		cursor c1 is 
+		select ev_idn,ev_mnth_of_acnt,sp_py_cd,
+			round((sp_py_amnt*(to_number(substr(last_day(ev_mnth_of_acnt),1,2))
+				-sum(nvl(ev_evnt_dys,0))))/(to_number(substr(last_day(ev_mnth_of_acnt),1,2)))) new_spp
+		from ags.clms_evnts,ags.clms_spp_entry
+		where
+			ev_idn=sp_idn and ev_mnth_of_acnt=sp_mnth_of_acnt and
+			sp_bll_id=:bll_id
+		group by ev_idn,ev_mnth_of_acnt,sp_py_cd,sp_py_amnt;
+	begin
+		open c1;
+		loop
+			fetch c1 into id,mon,sp,sp_amn;
+			exit when c1% notfound;
+			idd:=id;
+			monn:=mon;
+			spp:=sp;
+			sp_amnn:=sp_amn;
+			update ags.clms_spp_entry set sp_py_amnt=sp_amnn where sp_idn=idd and sp_bll_id=:bll_id
+			AND sp_py_cd=spp;
+		end loop;
+		close c1;
+	end;
+		--------------------------------*******************************--------------------------------
+		
+		----('events d sureshhhhh');
+		COMMIT;
+		
+	--ppsp total
+	declare
+		a varchar2(4);  --sp_idn not null
+		b varchar2(11);  --sp_bll_id
+		c date;         --month
+		d varchar2(3);   --sp_py-cd
+		e number;      --sp_py_amnt
+		f varchar2(15);  --user
+		g date;   --sp_crtd_dt
+		aa varchar2(4);  --sp_idn not null
+		bb varchar2(11);  --sp_bll_id
+		cc date;         --month
+		dd varchar2(3);   --sp_py-cd
+		ee number;      --sp_py_amnt
+		ff varchar2(15);  --user
+		gg date;   --sp_crtd_dt
+		cursor c1 is 
+		select sp_idn,nvl(sum(sp_py_amnt),0) 
+		from ags.clms_spp_entry 
+		where sp_bll_id=:clms_py_bll_hdr.bll_id group by sp_idn;
+	begin
+		open c1;
+		loop
+			fetch c1 into a,e;
+			exit when c1% notfound;
+			aa:=a;
+			ee:=e;
+			--***********************************(((((((((((((((((((((((((((((((((((((((((((((((
+			update ags.clms_erng_entry set er_ppsp_ttl=ee
+			where er_idn=aa and er_bll_id=:clms_py_bll_hdr.bll_id;
+
+
+		end loop;
+		close c1;
+	end;
+	----('SP / PP INSERTED ! PRESS ENTER TO CONTINUE!!!');
+		
+		
+	--GROSS 
+
+	--for TIERi AND tier II  
+	--MESSAGE('UPTO THIS OK');
+	declare
+		a varchar2(4);  --sp_idn not null
+		b varchar2(11);  --sp_bll_id
+		c date;         --month
+		d varchar2(3);   --sp_py-cd
+		e number;      --sp_py_amnt
+		f varchar2(15);  --user
+		g date;   --sp_crtd_dt
+		aa varchar2(4);  --sp_idn not null
+		bb varchar2(11);  --sp_bll_id
+		cc date;         --month
+		dd varchar2(3);   --sp_py-cd
+		ee number;      --sp_py_amnt
+		ff varchar2(15);  --user
+		gg date;   --sp_crtd_dt
+		h number; hh number;   
+		--retirement
+		xx varchar2(4); xxx varchar2(4); ret date; rett date;
+		chk date; 
+		cursor c1 is 
+			select ps_idn,nvl(ps_tierI,0),nvl(ps_tierII,0)  
+			from ags.prsnl_infrmtn_systm 
+			where cm_unt_cd=:clms_py_bll_hdr.unt
+				and cm_chq_pd=:clms_py_bll_hdr.csh_chq and 
+				cm_rti_nrti=:clms_py_bll_hdr.rti_nrti and nvl(PS_TIERI,0)<>0;
+		cursor c2 is 
+			select ps_idn,sr_dt_of_rtrmnt  
+			from ags.prsnl_infrmtn_systm 
+			where TO_CHAR(ADD_MONTHS(SYSDATE,-3),'DD/MM/RRRR')=TO_CHAR(SR_DT_OF_RTRMNT,'DD/MM/RRRR') 
+			and cm_unt_cd=:clms_py_bll_hdr.unt
+			and cm_chq_pd=:clms_py_bll_hdr.csh_chq
+			and cm_rti_nrti=:clms_py_bll_hdr.rti_nrti;
+	begin
+		open c1;
+		loop
+			fetch c1 into a,e,h;
+			exit when c1% notfound;
+			aa:=a;
+			ee:=e;
+			hh:=h;
+			--***********************************(((((((((((((((((((((((((((((((((((((((((((((((
+			update ags.clms_erng_entry 
+			set tier1=round((nvl(er_bsc_py,0)+nvl(er_dpay,0)+nvl(er_da,0))*.1),
+			tierII=hh
+			where er_idn=aa and er_bll_id=:clms_py_bll_hdr.bll_id;
+
+		end loop;
+		close c1;
+		open c2; 
+		loop fetch c2 into xx,ret;
+			exit when c2% notfound;
+			xxx:=xx; rett:=ret;
+			UPDATE CLMS_ERNG_ENTRY SET ER_GPF=0 WHERE er_idn=xxX and er_bll_id=:clms_py_bll_hdr.bll_id;
+		end loop;
+		close c2;
+	end;
+
+	commit;
+
+	--condition for stopping gpf 3 months before retirement 
+	
+	----for TIERi AND tier II  END
+		
+	update ags.clms_erng_entry 
+	set er_grss=nvl(er_ppsp_ttl,0)+nvl(er_bsc_py,0)+nvl(er_ca,0)+nvl(er_cca,0)+nvl(er_hra,0)+nvl(er_da,0)+nvl(er_dpay,0) 
+	where er_bll_id=:clms_py_bll_hdr.bll_id;
+		
+		
+	commit;
+	
+		--recovery total
+	declare
+		a varchar2(4);  --rc_idn not null
+		c number;  --rc amount
+
+		aa varchar2(4);  --rc_idn not null
+		cc number;  --rc amount
+
+		cursor c1 is 
+			select rc_idn,nvl(sum(rc_rcvry_amnt),0) 
+			from ags.clms_rcvry_entry 
+			where rc_bll_id=:clms_py_bll_hdr.bll_id  
+			group by rc_idn;
+
+	begin
+		open c1;
+		loop
+			fetch c1 into a,c;
+			exit when c1% notfound;
+			aa:=a;
+			cc:=c;
+			update ags.clms_erng_entry 
+			set er_rcvry_ttl=cc 
+			where er_idn=aa and er_bll_id=:bll_id;
+			
+			
+		end loop;
+		close c1;
+--MESSAGE('Recovery Total');
+	end;
+	commit;     
+
+
+	update ags.clms_erng_entry 
+	set er_rcvry_ttl=nvl(er_rcvry_ttl,0)+nvl(er_gpf,0)+nvl(er_cggis,0)+
+			nvl(er_cghs,0)+nvl(er_lcnc_fee,0)+nvl(er_pt,0)+nvl(er_it,0)+
+			nvl(er_it_srchr,0)+nvl(tierii,0)+nvl(tier1,0) 
+	where er_bll_id=:bll_id;
+
+	COMMIT;
+		-------------------------------------------------------------------------------------
+		-------------------------------------------------------------------------------------
+		----------------------------------------------------------------------------------
+		----('RECOVERY TOTAL UPDATED ! PRESS ENTER TO CONTINUE!!!');	
+
+		
+		
+		--NET PAY          
+		
+	--------------------------------------------------------------------------------------
+	declare
+		a varchar2(4);  --er_idn not null
+		c number;  --gross
+		d number;   --net
+		
+		aa varchar2(4);  --er_idn not null
+		cc number;  --gross
+		dd number;   --net
+		
+		cursor c1 is 
+			select er_idn,nvl(er_grss,0),
+					((nvl(er_grss,0))-nvl(er_rcvry_ttl,0)) 
+			from ags.clms_erng_entry 
+			where er_bll_id=:clms_py_bll_hdr.bll_id;
+
+	begin
+		open c1;
+		loop
+			fetch c1 into a,c,d;
+			exit when c1% notfound;
+			aa:=a;
+			cc:=c;
+			dd:=d;
+			update ags.clms_erng_entry 
+				set er_grss=cc, er_nt_py=dd 
+			where er_bll_id=:clms_py_bll_hdr.bll_id 
+				and er_idn=aa;
+		end loop;
+	close c1;
+	end;
+
+
+
+	declare
+		a varchar2(5);
+		aa varchar2(5);
+	begin
+		select py_bll_no into a 
+		from AGS.clms_py_bll_hdr 
+		where bll_id=:clms_py_bll_hdr.bll_id;
+		aa:=a;
+		--update ags.clms_erng_entry set er_billno=aa where er_bll_id=:clms_py_bll_hdr.bll_id;
+		update ags.clms_rcvry_entry set rc_billno=aa where rc_bll_id=:clms_py_bll_hdr.bll_id;
+		update ags.clms_spp_entry set sp_billno=aa where sp_bll_id=:clms_py_bll_hdr.bll_id;
+	end;
+		
+		----('NET AND GROSS INSERTED end! PRESS ENTER TO CONTINUE!!!');
+		--conditions for leave exceeds 30 days no travel allowance shall be given
+		
+	--UPDATE SECTION CODE
+	update ags.clms_erng_entry a 
+		set a.er_sctn_cd=(select ps_sctn_id from ags.prsnl_infrmtn_systm where ps_idn=a.er_idn);
+
+--message('Hiii');
+	--External Recovery Data Loaded   ***New***      
+	-------------------------------------------------------------------------------------
+
+	insert into ags.clms_extrnl_rcvry_dtls 
+	(EX_IDN,EX_BLL_ID,EX_MNTH_OF_ACNT,EX_RCVRY_CD,EX_RCVRY_AMNT, EX_USR_ID, EX_CRTD_DT, EX_RCVRY_AMNT_ORG)
+	select  AS_idn,c.er_bll_id,:clms_py_bll_hdr.cm_mnth_of_acnt,AS_rcvry_cd,nvl(AS_rcvry_amnt,0),substr(c.er_bll_id,4,4),sysdate,nvl(as_rcvry_amnt_org,0)
+	from ags.clms_extrnl_rcvry_mstr,ags.clms_erng_entry c 
+	where c.er_idn = as_idn and c.er_bll_id=:clms_py_bll_hdr.bll_id ;
+	commit;
+	
+	--------------------------------------------------------------------------------------	
+	--External Recovery Data Loaded   ***New***      
+		
+--message('Hiii2');
+	
+		--commit;
+		/*if substr(:clms_py_bll_hdr.usr,2,1)='1' then
+		set_item_property('er_gpf',visible,property_false);
+		set_item_property('tier1',visible,property_true);
+		set_item_property('tierII',visible,property_true);
+		else
+		set_item_property('er_gpf',visible,property_true);
+		set_item_property('tierI',visible,property_false);
+		set_item_property('tierII',visible,property_false);
+		end if;*/
+		--set_item_property('tier1',visible,property_false);
+		--set_item_property('tierII',visible,property_false);
+		
+		next_block;
+		commit;
+		execute_query;
+:system.message_level:=5;
+END;
+
+-- End of procedure -SURSH
+-- *******************************************************************************

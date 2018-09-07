@@ -1,0 +1,413 @@
+<?PHP
+require_once("./include/membersite_config.php");
+
+if(!$fgmembersite->CheckLogin())
+	{
+    $fgmembersite->RedirectToURL("login.php");
+    exit;
+	}
+
+$conn=oci_connect($fgmembersite->orauser(),$fgmembersite->orap(),$fgmembersite->oraho());
+	if (!$conn)
+	{
+	echo 'Failed to connect to Oracle';
+	die("Connection failed: " . $conn->connect_error);
+	}
+?>
+
+<head>
+<style>
+							.lg
+							{
+							float:left;
+							/*border:2px solid black;*/
+							width:50%;
+							}
+							.flg
+							{
+							float:left;
+							/*border:2px solid black;*/
+							width:100%;
+							}
+							.inv
+							{
+							visibility: hidden;
+							}
+</style>
+<script>
+			function makeviz(str)
+				{
+				
+				document.getElementById("cdr").style.visibility="hidden";		
+				if (str=='ps_cdr_id')
+				document.getElementById("cdr").style.visibility="visible";	
+				
+						
+				}
+
+			function wingchanged(str)
+				{
+				if (str!='%')
+				{
+				document.getElementById("cntt1").disabled=true;
+				document.getElementById("wingsel").disabled=true;
+				document.getElementById("cntt1").checked=false;
+				document.getElementById("wingsel").checked=false;
+				}
+				else
+				{
+			    document.getElementById("cntt1").disabled=false;
+				document.getElementById("wingsel").disabled=false;	
+				}
+				if (str.length!=0)
+				{
+		    	var xmlhttp = new XMLHttpRequest();
+		    	xmlhttp.onreadystatechange = function()
+				{
+		    	if (this.readyState == 4 && this.status == 200)
+					{    //console.log('The resposeText received is this '+this.responseText);
+				document.getElementById("branch").innerHTML=this.responseText;
+					}
+				};
+				
+				xmlhttp.open("GET", "interfere.php?q=" + str+'&n=03', true);
+				//console.log(str);
+        		xmlhttp.send();
+				}
+			 	}
+	
+			function branchchanged(str)
+			 	{
+				//document.getElementById("wing").value=document.getElementById("wing1").value;
+				if (str!='%')
+				{
+                document.getElementById("cntt1").disabled=true;
+				document.getElementById("wingsel").disabled=true;
+				document.getElementById("cntt1").checked=false;
+				document.getElementById("wingsel").checked=false;
+
+				document.getElementById("cntt2").disabled=true;
+				document.getElementById("branchsel").disabled=true;
+				document.getElementById("cntt2").checked=false;
+				document.getElementById("branchsel").checked=false;
+				}
+				else
+				{
+			    document.getElementById("cntt2").disabled=false;
+				document.getElementById("branchsel").disabled=false;	
+
+				document.getElementById("cntt1").disabled=false;
+				document.getElementById("wingsel").disabled=false;
+				}
+		 		if (str.length!=0)
+				{
+				var xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function()
+					{
+			 	if (this.readyState == 4 && this.status == 200)
+						{   // console.log('The resposeText received is this '+this.responseText);
+		     	document.getElementById("section").innerHTML=this.responseText;
+						}
+				    };
+			 	xmlhttp.open("GET", "interfere.php?q=" + str+'&n=%', true);
+				//console.log(str);
+        		xmlhttp.send();
+				}
+				}
+
+				function disablehq(str)
+				{
+				if (str!='%')
+				{
+                document.getElementById("cntt5").disabled=true;
+				document.getElementById("roomsel").disabled=true;
+				document.getElementById("cntt5").checked=false;
+				document.getElementById("roomsel").checked=false;
+			
+				}
+				else
+				{
+			    document.getElementById("cntt5").disabled=false;
+				document.getElementById("roomsel").disabled=false;	
+				}	
+				}
+
+				function secchanged(str)
+				{
+				if (str!='%')
+				{
+                document.getElementById("cntt1").disabled=true;
+				document.getElementById("wingsel").disabled=true;
+				document.getElementById("cntt1").checked=false;
+				document.getElementById("wingsel").checked=false;
+
+				document.getElementById("cntt2").disabled=true;
+				document.getElementById("branchsel").disabled=true;
+				document.getElementById("cntt2").checked=false;
+				document.getElementById("branchsel").checked=false;
+
+				document.getElementById("cntt3").disabled=true;
+				document.getElementById("secsel").disabled=true;
+				document.getElementById("cntt3").checked=false;
+				document.getElementById("secsel").checked=false;
+			
+				}
+				else
+				{
+			    document.getElementById("cntt3").disabled=false;
+				document.getElementById("secsel").disabled=false;	
+
+				document.getElementById("cntt2").disabled=false;
+				document.getElementById("branchsel").disabled=false;
+
+				document.getElementById("cntt1").disabled=false;
+				document.getElementById("wingsel").disabled=false;	
+				}	
+				}
+
+
+				function cdrchanged(str)
+				{
+				if (str!='%')
+				{
+                document.getElementById("cntt1").disabled=true;
+				document.getElementById("wingsel").disabled=true;
+				document.getElementById("cntt1").checked=false;
+				document.getElementById("wingsel").checked=false;
+
+				document.getElementById("cntt2").disabled=true;
+				document.getElementById("branchsel").disabled=true;
+				document.getElementById("cntt2").checked=false;
+				document.getElementById("branchsel").checked=false;
+
+				document.getElementById("cntt3").disabled=true;
+				document.getElementById("secsel").disabled=true;
+				document.getElementById("cntt3").checked=false;
+				document.getElementById("secsel").checked=false;
+
+				document.getElementById("cntt4").disabled=true;
+				document.getElementById("cadsel").disabled=true;
+				document.getElementById("cntt4").checked=false;
+				document.getElementById("cadsel").checked=false;
+			
+				}
+				else
+				{
+			    document.getElementById("cntt3").disabled=false;
+				document.getElementById("secsel").disabled=false;	
+
+				document.getElementById("cntt2").disabled=false;
+				document.getElementById("branchsel").disabled=false;
+
+				document.getElementById("cntt1").disabled=false;
+				document.getElementById("wingsel").disabled=false;	
+
+				document.getElementById("cntt4").disabled=false;
+				document.getElementById("cadsel").disabled=false;	
+				}	
+				}
+
+				function wingbutton(str)
+				  {
+				var x=document.getElementById("wingsel").value;
+				if (x=="ps_wing")
+                     {
+                document.getElementById("cntt1").disabled=true;
+				document.getElementById("cntt1").checked=false;
+                     }
+
+				  }
+
+				function branchbutton(str)
+				  {
+				var x=document.getElementById("branchsel").value;
+				if (x=="ps_brnch_id")
+                     {
+                document.getElementById("cntt1").disabled=true;
+				document.getElementById("cntt1").checked=false;
+				document.getElementById("cntt2").disabled=true;
+				document.getElementById("cntt2").checked=false;
+                     }
+
+				  }
+
+				function secbutton(str)
+				  {
+				var x=document.getElementById("secsel").value;
+				if (x=="ps_sctn_id")
+                     {
+                document.getElementById("cntt1").disabled=true;
+				document.getElementById("cntt1").checked=false;
+				document.getElementById("cntt2").disabled=true;
+				document.getElementById("cntt2").checked=false;
+				document.getElementById("cntt3").disabled=true;
+				document.getElementById("cntt3").checked=false;
+                     }
+
+				  }
+
+			    function cdrbutton(str)
+				  {
+				var x=document.getElementById("cadsel").value;
+				if (x=="ps_cdr_id")
+                     {
+                document.getElementById("cntt1").disabled=true;
+				document.getElementById("cntt1").checked=false;
+				document.getElementById("cntt2").disabled=true;
+				document.getElementById("cntt2").checked=false;
+				document.getElementById("cntt3").disabled=true;
+				document.getElementById("cntt3").checked=false;
+				document.getElementById("cntt4").disabled=true;
+				document.getElementById("cntt4").checked=false;
+                     }
+
+				  }
+
+				function roombutton(str)
+				  {
+				var x=document.getElementById("roomsel").value;
+				if (x=="ps_room_no")
+                     {
+                document.getElementById("cntt5").disabled=true;
+				document.getElementById("cntt5").checked=false;
+                     }
+
+				  }
+</script>
+</head>
+
+
+<body>
+
+<fieldset class="lg">
+	<legend>Select specifics</legend>
+
+	<lab class="lg bl">Wing</lab>   
+	      <inp class="lg">
+	      :<select id="wing" name="wing"  onchange="wingchanged(this.value)"  >  
+          <option value='%' selected>none selected</option>
+	      <option value='W01'>GSSA</option>
+	      <option value='W11'>ERSA</option>
+	      <option value='W21'>PD Central</option>
+	      </select>
+	      </inp>
+
+	<lab class="lg bl">Branch</lab>   
+	      <inp class="lg">
+	      :<select id="branch" name="branch" onchange="branchchanged(this.value)"  >  
+	      <option value='%' selected>none selected</option>
+          		<?php
+          		$query="select dmn_id, dmn_dscrptn from estt_dmn_mstr where dmn_typ='03'";
+          		$statemen=oci_parse($conn,$query);
+		  		oci_execute($statemen);
+	      		while( $row=oci_fetch_array($statemen))
+	      				{
+	      		$val=$row["DMN_ID"];
+	      		$dumval=$row["DMN_DSCRPTN"];
+	      		echo "<option value='$val'>$dumval</option>";
+	      				}
+          		?>
+	      </select>
+	      </inp>
+
+	<lab class="lg bl">Section</lab>   
+	      <inp class="lg">
+	      :<select id="section" name="section" onchange="secchanged(this.value)"  >  
+	      <option value='%' selected>none selected</option>
+          		<?php
+          		$query="select dmn_id, dmn_dscrptn from estt_dmn_mstr where dmn_typ='17'";
+          		$statemen=oci_parse($conn,$query);
+		  		oci_execute($statemen);
+	      		while( $row=oci_fetch_array($statemen))
+	      				{
+	      		$val=$row["DMN_ID"];
+	      		$dumval=$row["DMN_DSCRPTN"];
+	      		echo "<option value='$val'>$dumval</option>";
+	      				}
+          		?>
+	      </select>
+	      </inp>
+
+	 <lab class="lg bl">Designation</lab>   
+	      <inp class="lg">
+	      :<select id="cadre" name="cadre" onchange="cdrchanged(this.value)"  >   
+	      <option value='%' selected>none selected</option>
+          		<?php
+          		$query="select dmn_id, dmn_dscrptn from estt_dmn_mstr where dmn_typ='01'";
+          		$statemen=oci_parse($conn,$query);
+		  		oci_execute($statemen);
+	      		while( $row=oci_fetch_array($statemen))
+	      				{
+	      		$val=$row["DMN_ID"];
+	      		$dumval=$row["DMN_DSCRPTN"];
+	      		echo "<option value='$val'>$dumval</option>";
+	      				}
+          		?>
+	      </select>
+	      </inp>
+
+	 <lab class="lg bl">HQ</lab>   
+	      <inp class="lg">
+	      :<select id="room" name="room"  onchange="disablehq(this.value)"  >  
+          <option value='%' selected>none selected</option>
+	      <option value='TVM'>TVM</option>
+	      <option value='EKM'>Cochin</option>
+	      <option value='TCR'>Trichur</option>
+	      <option value='KDE'>Kozhikode</option>
+	      <option value='KTM'>Kottayam</option>
+	      </select>
+	      </inp>
+
+
+</fieldset>
+
+
+
+<fieldset class="lg">
+	<legend>Count to be shown </legend>
+	<lab class="flg"><input  type='radio' id='wingsel' name='sel' value='ps_wing' onfocus="wingbutton()">per wing</lab>
+	<lab class="flg"><input  type='radio' id='branchsel' name='sel' value='ps_brnch_id' onfocus="branchbutton()">per branch</lab>
+	<lab class="flg"><input  type='radio' id='secsel' name='sel' value='ps_sctn_id' onfocus='secbutton()'>per section</lab>
+	<lab class="flg"><input  type='radio' id='cadsel' name='sel' value='ps_cdr_id' onfocus="cdrbutton()">per cadre</lab>
+	<lab class="flg"><input  type='radio' id='roomsel' name='sel' value='ps_room_no' onfocus='roombutton()'>per HQ</lab>
+</fieldset>
+
+
+
+<fieldset class="lg">
+	<legend>Select what is to be counted?</legend>
+	<lab class="flg"><input  type='radio' id='cntt1' name='csel' value='ps_wing' 
+	                 onfocus="makeviz(this.value) " checked>wings</lab>
+	<lab class="flg"><input  type='radio' id='cntt2' name='csel' value='ps_brnch_id' 
+					 onfocus="makeviz(this.value) ">branches</lab>
+	<lab class="flg"><input  type='radio' id='cntt3' name='csel' value='ps_sctn_id' 
+					 onfocus="makeviz(this.value) ">sections</lab>
+	<lab class="flg"><input  type='radio' id='cntt5' name='csel' value='ps_room_no' 
+					 onfocus="makeviz(this.value) " >HQs</lab>
+	<lab class="flg"><input  type='radio' id='cntt4' name='csel' value='ps_cdr_id' 
+	                 onfocus="makeviz(this.value) " >employees</lab>
+    
+    <opto id="cdr" class="inv">
+	<lab class="lg bl ">Designation</lab>   
+	      <inp class="lg">
+	      :<select id="cadref" name="cadref">   <!-- onchange="wingchanged(this.value)"  >  -->
+	      <option value='%' selected>none selected</option>
+          		<?php
+          		$query="select dmn_id, dmn_dscrptn from estt_dmn_mstr where dmn_typ='01'";
+          		$statemen=oci_parse($conn,$query);
+		  		oci_execute($statemen);
+	      		while( $row=oci_fetch_array($statemen))
+	      				{
+	      		$val=$row["DMN_ID"];
+	      		$dumval=$row["DMN_DSCRPTN"];
+	      		echo "<option value='$val'>$dumval</option>";
+	      				}
+          		?>
+	      </select>
+	      </inp>
+	</opto>
+
+</fieldset>
+
+
+</body>

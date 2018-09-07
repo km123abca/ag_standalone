@@ -1,0 +1,11 @@
+setlocal ENABLEDELAYEDEXPANSION
+set COUNT=0
+echo off
+for /f   %%v in ('dir /b /a-d /od "test"') do (
+  set /A COUNT=!COUNT! + 1
+  ren test\%%v fil!COUNT!
+  echo ren test\%%v fil!COUNT!
+  rem echo %%v
+)
+
+pause="complete"

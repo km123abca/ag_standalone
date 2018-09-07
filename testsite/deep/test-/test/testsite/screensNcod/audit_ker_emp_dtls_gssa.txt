@@ -1,0 +1,177 @@
+PROCEDURE FindSal IS
+	idno varchar2 (4);
+	dsgcd varchar2(4);
+	a varchar2(6);
+	b varchar2(6);
+	c varchar2(6);
+	salmin number;
+	salmax number;
+	salgp number;
+	salgp1 varchar2(6);
+	acp varchar2(3);
+	bp NUMBER;
+	rbp NUMBER;
+/*Added on 10.7.2017*/	
+	TA_Flag varchar2(2);
+	PH_Flag varchar2(2);
+	Unit_cd varchar2(4);
+	curr_da_rate number;
+/*Added on 10.7.2017*/
+BEGIN
+--	message( 'Hii 1');
+
+--Added on 20_Oct_2017 to update tieri of all employees 
+
+select nda into curr_da_rate from clms_hra_da_mstr;
+
+/*
+update prsnl_infrmtn_systm a
+set ps_tieri=(  select round(  ps_pca_bsc_jan06*(1+curr_da_rate*.01)*.1  )  from prsnl_infrmtn_systm where ps_idn=a.ps_idn)
+where ps_tieri is not null;
+commit;
+*/
+
+/*Added on 10.7.2017*/
+	salgp1 := :prsnl_infrmtn_systm1.ps_floor;
+	TA_Flag := :prsnl_infrmtn_systm1.cm_ta_rqrd_flg;
+	PH_Flag := :prsnl_infrmtn_systm1.ps_ph_stts;
+	Unit_cd := :prsnl_infrmtn_systm1.cm_unt_cd;
+/*Added on 10.7.2017*/
+
+	dsgcd := :prsnl_infrmtn_systm1.ps_cdr_id;
+	idno := :prsnl_infrmtn_systm1.ps_idn;
+	bp := :prsnl_infrmtn_systm1.CM_BSC_PY1;
+	rbp := :prsnl_infrmtn_systm1.PS_PCA_BSC_JAN06;
+	acP := NVL(:prsnl_infrmtn_systm1.SR_ACP_STTS,'N') || NVL(:prsnl_infrmtn_systm1.SR_ACP_STTS2,'N') ||
+					NVL(:prsnl_infrmtn_systm1.SR_ACP_STTS3,'N');
+	if (acP='YNN' or acP = 'NNY') then
+		-- if acp status 1 or acp status three are 'Y' 
+		-- change designation to ACP designation
+		dsgcd := :prsnl_infrmtn_systm1.sr_acp_cdr_id;
+	end if;
+
+	-- get MIN pay, MAX pay and Grade Pay for that designation
+	select  nvl(PCA_MIN,0), nvl(PCA_MAX,0),nvl(PCA_GRADE_PAY,0) into a,b,c  
+	  from ags.clms_dsgntn_py_mstr 
+	  where  dsgntn_id=dsgcd;
+
+	salmin := to_number(a);
+	salmax := to_number(b);
+	salgp := to_number(c);
+
+----- find DA
+	Declare
+		dap number;
+		hrap number;
+	BEGIN
+--	message( 'Hii 2');
+		select nda, hra into dap ,hrap from clms_hra_da_mstr;
+/*Added on 10.7.2017*/		
+		--for Kottayam Employees HRA = 10%
+			if (:prsnl_infrmtn_systm1.cm_unt_cd in ('U030','U032','U033','U130','U132','U133')) then
+				hrap := 8; 
+			else 
+				hrap := 16; 
+   		end if;
+		--for Kottayam Employees HRA = 10%
+/*Added on 10.7.2017*/		
+		
+	-- to exclude da from the pay bill due to 7th pay revision
+	
+--if 	idno = 1897 then
+	--	:emp.da := round((:prsnl_infrmtn_systm1.CM_BSC_PY1+:prsnl_infrmtn_systm1.grade_pay)*dap/100);
+	 
+	   	:emp.da := round((:prsnl_infrmtn_systm1.PS_PCA_BSC_JAN06)*dap/100);
+		 -- :emp.da :=0;
+	   :emp.hra :=0;
+	
+		if :CLMS_RGLR_RCVRY_DTLS_MSTR.RG_LCNC_FEE = 0 then
+			
+/*Added on 10.7.2017*/			
+		/* Updated on 7.7.2017*/
+			--:emp.hra := round((:prsnl_infrmtn_systm1.CM_BSC_PY1+nvl(:prsnl_infrmtn_systm1.grade_pay,0))*hrap/100);
+			:emp.hra := round((:prsnl_infrmtn_systm1.ps_pca_bsc_jan06)*hrap/100);
+			
+			if (:prsnl_infrmtn_systm1.cm_unt_cd in ('U030','U032','U033','U130','U132','U133')) then
+				 if 	:emp.hra < 1800 then
+					:emp.hra := 1800;
+				 end if;	
+			else	
+				If  :emp.hra < 3600 then 
+			    :emp.hra := 3600;
+				end if;	
+			end if;
+				/* Updated on 7.7.2017*/
+		end if;
+--end if;		
+/*Added on 10.7.2017*/	 
+
+	
+		if  :prsnl_infrmtn_systm.cm_accmmdtn='Y' then
+		:emp.hra :=0;			 
+		end if;
+	END;
+	
+--	salgp1 := :prsnl_infrmtn_systm1.ps_floor;
+--TA_Flag := :prsnl_infrmtn_systm1.cm_ta_rqrd_flg;
+---PH_Flag := :prsnl_infrmtn_systm1.ps_ph_stts;
+	
+	-- find hra
+	
+	--To get TA correct for ACP employees.
+	
+	--salgp := :prsnl_infrmtn_systm1.grade_pay;
+--	salgp1 := :prsnl_infrmtn_systm1.ps_floor;
+
+/*Added on 10.7.2017*/	
+----- Find TA
+	:emp.ta := ta(SALGP1,
+			TA_Flag,
+			PH_Flag,
+			DSGCD,bp,Unit_cd,:prsnl_infrmtn_systm.ps_idn,rbp);
+--		message( 'Hii 3');	
+		message(salgp);
+ :emp.daonta := daonta(SALGP);
+		
+/*Added on 10.7.2017*/
+----- Find CGHS 
+			DECLARE
+
+			BEGIN
+
+				
+				:emp.cghs := cghs(nvl(:prsnl_infrmtn_systm1.ps_floor,0),
+						:prsnl_infrmtn_systm1.cm_cghs_flg, idno);
+			END;
+			
+			--select 0.05*ps_pca_bsc_jan06 into Sp from prsnl_infrmtn_systm a,CLMS_SP_SNCTN_MSTR  b where b.idno=a.ps_idn and b.tycode='SP4' and   
+
+	 select nvl(sum(spamount),0) into :emp.totaddleml from CLMS_SP_SNCTN_MSTR 
+			where idno = :prsnl_infrmtn_systm.ps_idn and mnth_flg<>'C' and mnth_flg<>'N';-- appended mnth_flg<>'N' on 21_7_17
+--message(:emp.TOTAL_RCVRY);
+	select :CLMS_RGLR_RCVRY_DTLS_MSTR.rg_gpf+:CLMS_RGLR_RCVRY_DTLS_MSTR.rg_cggis+
+			:CLMS_RGLR_RCVRY_DTLS_MSTR.rg_it+:CLMS_RGLR_RCVRY_DTLS_MSTR.rg_it_srchr+
+			:CLMS_RGLR_RCVRY_DTLS_MSTR.rg_pt+
+			:CLMS_RGLR_RCVRY_DTLS_MSTR.rg_lcnc_fee+NVL(:prsnl_infrmtn_systm1.ps_tierI,0)+
+			NVL(:CLMS_RGLR_RCVRY_DTLS_MSTR.rg_tierII,0)+:emp.cghs 
+		into :emp.totregrec from CLMS_rglr_RCVRY_dtls_MSTR 
+			where rg_idn = :prsnl_infrmtn_systm.ps_idn;	
+select nvl(sum(rd_rcvry_amnt),0) into :emp.totintrec from CLMS_RCVRY_dtls_MSTR 
+			where rd_idn = :prsnl_infrmtn_systm.ps_idn and rd_clsd_flg <> 'C' and rd_crrnt_instlmnt <> rd_ttl_instlmnt ;	
+	select nvl(sum(AS_rcvry_amnt),0) into :emp.totextrec from CLMS_EXTRNL_RCVRY_MSTR 
+			where AS_idn = :prsnl_infrmtn_systm.ps_idn;
+-- to update the revised band pay, due to 7th pay revision	
+--:emp.totemoluments := :prsnl_infrmtn_systm.CM_BSC_PY1+:PRSNL_INFRMTN_SYSTM.grade_pay+:emp.da + :emp.hra+
+										---	:emp.ta+:emp.daonta+:emp.totaddleml;
+:emp.totemoluments := :prsnl_infrmtn_systm.PS_PCA_BSC_JAN06+:emp.hra+:emp.da +
+											:emp.ta+:emp.daonta+:emp.totaddleml;								
+										
+:emp.totgrand := :emp.totemoluments-:emp.totregrec-:emp.totintrec-:emp.totextrec;
+:emp.BILLS_RCVRY := :emp.totregrec+:emp.totintrec;
+--:emp.TOTAL_RCVRY := :emp.totregrec+:emp.totintrec+:emp.totextrec;      
+:emp.BILLS_NET := :emp.totemoluments-:emp.totregrec-:emp.totintrec;                                                           
+                                                                 
+--message(:emp.TOTAL_RCVRY);
+--message( 'Hii 4');
+
+END;

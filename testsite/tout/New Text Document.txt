@@ -1,0 +1,423 @@
+declare
+a number;
+idn varchar2(4);
+temp varchar2(40);
+mnt date;
+gpf number;
+ref number;
+cou number;
+yea date;
+nn date;nnn date;
+cursor c1 is 
+SELECT A.ER_IDN,A.ER_MNTH_OF_ACNT,A.ER_GPF,NVL(B.REF,0) REF FROM
+(select er_idn,er_gpf,er_mnth_of_acnt from clms_erng_ENTRY where substr(er_bll_id,5,1) = substr(:parameter.wing,2,1)
+) A,
+(SELECT rc_idn,RC_MNTH_OF_ACNT,rc_rcvry_cd,NVL(rc_rcvry_amnt,0) ref from clms_rcvry_ENTRY
+where  rc_rcvry_cd='IGP' and substr(rc_bll_id,5,1) = substr(:parameter.wing,2,1)) B
+WHERE A.ER_IDN=B.RC_IDN(+) AND
+A.ER_MNTH_OF_ACNT=B.RC_MNTH_OF_ACNT(+);
+
+begin
+select count(*) into a from ags.clms_erng_yrfl where er_mnth_of_acnt=:close and substr(er_bll_id,5,1) = substr(:parameter.wing,2,1);
+
+
+if a>0 then
+message('Already closed');
+else
+message ('not Closed');
+
+      open c1;
+        loop
+        fetch c1 into idn,mnt,gpf,ref;
+        exit when c1% notfound;
+--message ('1');
+--temp:='01/12/'||to_char(mnt,'RRRR');
+--message(temp);
+
+
+--to get the interest month
+select to_date('01/12/'||to_char(mnt,'RRRR'),'DD/MM/YYYY') into yea from dual;
+
+--For Sample --- if ((to_char(dnn,'mm/rrrr'))=to_char(:cm_mnth_of_acnt,'mm/rrrr')) THEN
+			
+--select to_date('01/11/2013', 'DD/MM/YYYY') into yea from dual;
+--message ('2');
+--to get the financial year
+select to_date('01/12/'||substr(yr,1,4),'DD/MM/YYYY')  into nn from ESTT_FNNL_YR_FOR_BILLNO where 
+stts='O';
+--message ('3');
+--message('01/12/'||substr(nn,1,4)) ;
+     select count(ld_idn) into cou from ags.clms_gpf_ledger where ld_idn=idn
+       and ld_mnth_of_acCnt=mnt;
+     if cou>0 then
+     --	message ('4');
+     update ags.clms_gpf_ledger set ld_sub=gpf,ld_refund=ref where ld_idn=idn and
+      ld_mnth_of_acCnt=mnt;
+    else
+      insert into ags.clms_gpf_ledger(ld_idn,ld_mnth_of_acCnt,ld_intrst_mnth,ld_trnsctn_yr,ld_sub,ld_refund,
+       ld_crtd_dt,ld_crtd_by,ld_int_flg) values(idn,mnt,add_months(mnt,1),nn,
+       gpf,ref,sysdate,'AGS','N');
+     END IF;
+END LOOP;
+CLOSE C1;
+
+
+
+
+delete from ags.clms_erng_entry_lv;
+delete from ags.clms_rcvry_entry_lv;
+delete from ags.clms_spp_entry_lv;
+delete from ags.clms_extrnl_rcvry_dtls_lv;
+delete from ags.clms_py_bll_hdr_lv;
+insert into ags.clms_py_bll_hdr_lv select * from ags.clms_py_bll_hdr where substr(bll_id,5,1) = substr(:parameter.wing,2,1);
+insert into ags.clms_erng_entry_lv select * from ags.clms_erng_entry where substr(er_bll_id,5,1) = substr(:parameter.wing,2,1);
+insert into ags.clms_rcvry_entry_lv select * from ags.clms_rcvry_entry where substr(rc_bll_id,5,1) = substr(:parameter.wing,2,1);
+insert into ags.clms_spp_entry_lv select * from ags.clms_spp_entry where substr(sp_bll_id,5,1) = substr(:parameter.wing,2,1);
+insert into ags.clms_extrnl_rcvry_dtls_lv select * from ags.clms_extrnl_rcvry_dtls where substr(ex_bll_id,5,1) = substr(:parameter.wing,2,1);
+commit;
+   --	message ('5');
+--update ags.clms_py_bll_hdr set py_bll_flg='Y';
+update ags.clms_py_bll_hdr set py_bll_flg='Y' where substr(bll_id,5,1) = substr(:parameter.wing,2,1);
+INSERT INTO ags.CLMS_ERNG_YRFL( ER_IDN,
+ ER_PIS_CDR             ,
+ ER_BLL_ID              ,
+ ER_BSC_PY              ,
+ ER_DA                  ,
+ ER_HRA                 ,
+ ER_CCA                 ,
+ ER_CA                  ,
+ ER_PPSP_TTL            ,
+ ER_GRSS                ,
+ ER_GPF                 ,
+ ER_CGGIS               ,
+ ER_CGHS                ,
+ ER_LCNC_FEE            ,
+ ER_PT                  ,
+ ER_IT                  ,
+ ER_IT_SRCHR            ,
+ ER_RCVRY_TTL           ,
+ ER_NT_PY               ,
+ ER_MNTH_OF_ACNT        ,
+ ER_BILLNO              ,
+ ER_SCTN_CD             ,
+ ER_LCNC_FEE_IN_OFFICE,
+ er_dpay,TIER1,TIERII)
+ select 
+ ER_IDN                 ,
+ ER_PIS_CDR             ,
+ ER_BLL_ID              ,
+ ER_BSC_PY              ,
+ ER_DA                  ,
+ ER_HRA                 ,
+ ER_CCA                 ,
+ ER_CA                  ,
+ ER_PPSP_TTL            ,
+ ER_GRSS                ,
+ ER_GPF                 ,
+ ER_CGGIS               ,
+ ER_CGHS                ,
+ ER_LCNC_FEE            ,
+ ER_PT                  ,
+ ER_IT                  ,
+ ER_IT_SRCHR            ,
+ ER_RCVRY_TTL           ,
+ ER_NT_PY               ,
+ ER_MNTH_OF_ACNT        ,
+ ER_BILLNO              ,
+ ER_SCTN_CD             ,
+ ER_LCNC_FEE_IN_OFFICE,er_dpay,TIER1,TIERII
+ from ags.clms_erng_entry where substr(er_bll_id,5,1) = substr(:parameter.wing,2,1);
+ insert into ags.clms_rcvry_yrfl
+ (RC_IDN           ,
+ RC_BLL_ID         ,
+ RC_MNTH_OF_ACNT    ,
+ RC_RCVRY_CD         ,
+ RC_CRRNT_INSTLMNT,
+ RC_TTL_INSTLMNT   ,
+ RC_RCVRY_AMNT      ,
+ RC_USR_ID           ,
+ RC_CRTD_DT           ,
+ RC_BILLNO             )
+ select
+  RC_IDN           ,
+ RC_BLL_ID         ,
+ RC_MNTH_OF_ACNT    ,
+ RC_RCVRY_CD         ,
+ RC_CRRNT_INSTLMNT,
+ RC_TTL_INSTLMNT   ,
+ RC_RCVRY_AMNT      ,
+ RC_USR_ID           ,
+ RC_CRTD_DT           ,
+ RC_BILLNO            from ags.clms_rcvry_entry where substr(rc_bll_id,5,1) = substr(:parameter.wing,2,1);
+insert into ags.clms_spp_yrfl(
+SP_IDN         ,
+SP_BLL_ID      ,
+SP_MNTH_OF_ACNT,
+SP_PY_CD       ,
+SP_PY_AMNT     ,
+SP_USR_ID      ,
+SP_CRTD_DT     ,
+SP_BILLNO)
+select
+SP_IDN         ,
+SP_BLL_ID      ,
+SP_MNTH_OF_ACNT,
+SP_PY_CD       ,
+SP_PY_AMNT     ,
+SP_USR_ID      ,
+SP_CRTD_DT     ,
+SP_BILLNO
+     from ags.clms_spp_entry where substr(sp_bll_id,5,1) = substr(:parameter.wing,2,1);
+insert into ags.clms_extrnl_rcvry_yrfl
+( EX_IDN                 ,
+ EX_BLL_ID              ,
+ EX_MNTH_OF_ACNT        ,
+ EX_RCVRY_CD            ,
+ EX_RCVRY_AMNT          ,
+ EX_USR_ID              ,
+ EX_CRTD_DT             ,
+ EX_RCVRY_AMNT_ORG      )
+select
+ EX_IDN                 ,
+ EX_BLL_ID              ,
+ EX_MNTH_OF_ACNT        ,
+ EX_RCVRY_CD            ,
+ EX_RCVRY_AMNT          ,
+ EX_USR_ID              ,
+ EX_CRTD_DT             ,
+ EX_RCVRY_AMNT_ORG  from ags.clms_extrnl_rcvry_dtls where substr(ex_bll_id,5,1) = substr(:parameter.wing,2,1);
+insert into ags.clms_py_bll_hdr_yrfl select * from ags.clms_py_bll_hdr where substr(bll_id,5,1) = substr(:parameter.wing,2,1);
+message('Step 1 : Transferred to year file and please wait further');
+
+COMMIT;
+
+declare
+i varchar2(4);
+ii varchar2(4);
+one number;
+onee number;
+two number;
+twoo number;
+three number;
+threee number;
+four number;
+fourr number;
+five number;
+fivee number;
+six number;
+sixx number;
+cursor c1 is select er_idn,er_cggis,er_lcnc_fee,er_pt,er_it,er_it_srchr,er_gpf
+from ags.clms_erng_entry where substr(er_bll_id,5,1) = substr(:parameter.wing,2,1) ;
+begin
+open c1;
+loop
+fetch c1 into i,one,two,three,four,five,six;
+exit when c1% notfound;
+ii:=i;
+onee:=one;
+twoo:=two;
+threee:=three;
+fourr:=four;
+fivee:=five;
+sixx:=six;
+update ags.clms_rglr_rcvry_dtls_mstr set
+rg_cggis=onee,rg_lcnc_fee=twoo,rg_pt=threee,rg_it=fourr,rg_it_srchr=fivee,rg_gpf=sixx where
+rg_idn=ii;
+end loop;
+end;
+
+
+
+message('Step 1 : Regular recovery is updated please wait');
+
+
+declare
+ a varchar2(4);
+ b number;
+ c number;
+ d date;
+ 
+ aa varchar2(4);
+ bb number;
+ cc number;
+ dd date;
+ 
+ cursor c1 is SELECT A.ER_IDN,C.cm_BSC_PY1,A.ER_BSC_PY,c.cm_dni
+ FROM ags.CLMS_ERNG_ENTRY A,ags.prsnl_infrmtn_systm C WHERE
+ A.ER_IDN=C.PS_IDN AND C.cm_BSC_PY1<A.er_BSC_PY  and substr(er_bll_id,5,1) = substr(:parameter.wing,2,1);
+ --and A.ER_BLL_ID=:BLL_ID;
+ begin
+ open c1;
+ loop
+ fetch c1 into a,b,c,d;
+ exit when c1% notfound;
+ aa:=a;
+ bb:=b;
+ cc:=c;
+ dd:=d;
+
+--TO BE UNCOMMENTED
+--cag
+--modified by Rajkumar on 05-09-2016 as a result of pay revision
+--update ags.prsnl_infrmtn_systm set cm_bsc_py1=cc,ps_dpay=round(cc*.5,0),
+update ags.prsnl_infrmtn_systm set ps_dpay=round(cc*.5,0),
+cm_dli=dd,cm_dni=add_months(dd,12) where ps_idn=aa;
+ --UPDATE ags.PRSNL_INFRMTN_SYSTM SET CM_BSC_PY=CC,ps_dpay=round(cc*.5,0) WHERE PS_IDN=aa;
+ end loop;
+ close c1;
+ end;
+
+
+message('Step  2: Current Basic pay  is updated in the master please wait');
+
+declare
+ a varchar2(4);
+ b number;
+ c number;
+ d date;
+ 
+ aa varchar2(4);
+ bb number;
+ cc number;
+ dd date;
+ 
+ cursor c1 is SELECT A.ER_IDN,a.tier1
+ FROM ags.CLMS_ERNG_ENTRY A,ags.prsnl_infrmtn_systm C WHERE
+ A.ER_IDN=C.PS_IDN and substr(er_bll_id,5,1) = substr(:parameter.wing,2,1);
+ --and A.ER_BLL_ID=:BLL_ID;
+ begin
+ open c1;
+ loop
+ fetch c1 into a,b;
+ exit when c1% notfound;
+ aa:=a;
+ bb:=b;
+ 
+
+--TO BE UNCOMMENTED
+--cag
+update ags.prsnl_infrmtn_systm set ps_tieri=bb where ps_idn=aa;
+ --UPDATE ags.PRSNL_INFRMTN_SYSTM SET CM_BSC_PY=CC,ps_dpay=round(cc*.5,0) WHERE PS_IDN=aa;
+ end loop;
+ close c1;
+ end;
+
+/*
+ declare
+          a varchar2(4);
+          aa varchar2(4);
+          b varchar2(5);  --rc_rcvry_cd
+          bb varchar2(5);
+          i number;
+          ii number;
+          m date;
+          mm date;
+          U VARCHAR2(20);
+          UU VARCHAR2(20);
+          cursor c1 is select rc_idn,SUBSTR(RC_BLL_ID,8,4) ,rc_rcvry_cd,rc_crrnt_instlmnt,rc_mnth_of_acnt
+            from ags.clms_rcvry_entry WHERE RC_RCVRY_CD NOT IN('IPL','ICG');
+          begin
+          open c1;
+          loop
+          fetch c1 into a,u,b,i,m;
+          exit when c1% notfound;
+          aa:=a;
+          bb:=b;
+          ii:=i;
+          mm:=m;
+          uu:=u;
+--TO BE UNCOMMENTED
+  update ags.clms_rcvry_dtls_mstr set rd_crrnt_instlmnt=ii,rd_crtd_dt=mm,rd_usr_id=uu
+           where rd_idn=aa AND rd_rcvry_cd=bb and rd_clsd_flg='O';
+--MESSAGE('I AM HERE');
+end loop;
+          close c1;
+          end;*/
+-----------------------------------------------------------------------------
+--UPDATION OF RECOVERY INSTALMENT IN THE MASTER
+             declare
+          a varchar2(4);  
+          aa varchar2(4);
+          b varchar2(5);  --rc_rcvry_cd
+          bb varchar2(5);
+          i number;
+          ii number;
+          m date;
+          mm date;
+          cn number;
+          am number; amm number;
+usr varchar2(10); usrr varchar2(10);
+          cursor c1 is select rc_idn,rc_rcvry_cd,rc_crrnt_instlmnt,rc_mnth_of_acnt,rc_rcvry_amnt,RC_USR_ID
+            from ags.clms_rcvry_entry where
+            RC_RCVRY_CD NOT IN('IPL','ICG') and  substr(rc_bll_id,5,1) = substr(:parameter.wing,2,1);
+
+          begin
+           
+          open c1;
+          loop
+          fetch c1 into a,b,i,m,am,usr;
+          exit when c1% notfound;
+          aa:=a;
+          bb:=b;
+          ii:=i;
+          mm:=m; amm:=am;usrr:=usr;
+--TO BE UNCOMMENTED
+if bb='IGP' THEN
+ select count(*) into cn from clms_rcvry_dtls_mstr where rd_rcvry_cd='IGP' and
+ rd_clsd_flg='O' and rd_idn=aa;
+--message('i should come here');
+       if cn>1 then
+         update ags.clms_rcvry_dtls_mstr set rd_crrnt_instlmnt=ii,rd_usr_id=usrr,
+          rd_clsd_flg='Z'
+            where rd_idn=aa AND rd_rcvry_cd=bb  
+
+--NEWLY ADDED 09092005 OPEN
+         and to_char(to_date(mm),'DD-MON-YYYY') BETWEEN rc_rcvry_strt_dt and rc_rcvry_end_dt
+         and rd_rcvry_amnt=amm
+--NEWLY ADDED END 09092005
+;  
+--message('i should come here');
+       else
+           update ags.clms_rcvry_dtls_mstr set rd_crrnt_instlmnt=ii,rd_usr_id=usrr
+           where rd_idn=aa AND rd_rcvry_cd=bb and rd_clsd_flg='O'
+           and to_char(to_date(mm),'DD-MON-YYYY') BETWEEN
+            to_char(TO_DATE(rc_rcvry_strt_dt),'DD-MON-YYYY') and to_char(TO_DATE(rc_rcvry_end_dt),'DD-MON-YYYY')
+         and rd_rcvry_amnt=amm;
+--message('i should  not                         come here');
+       end if;
+else
+--message('i should  not ******************************************                         come here');
+  update ags.clms_rcvry_dtls_mstr set rd_crrnt_instlmnt=ii,rd_usr_id=usrr
+  where rd_idn=aa AND rd_rcvry_cd=bb and rd_clsd_flg='O'
+  and to_char(to_date(mm),'DD-MON-YYYY') BETWEEN rc_rcvry_strt_dt and rc_rcvry_end_dt
+         and rd_rcvry_amnt=amm
+;
+end if;
+
+end loop;
+          close c1;
+commit;
+          end;
+commit;
+
+message('step 3: Internal Recovery Details are updated');
+
+
+delete from ags.pis;
+--modified by Rajkumar as a result of pay revision 09/2016
+--insert into ags.pis select ps_idn,cm_bsc_py1 from ags.prsnl_infrmtn_systm;
+insert into ags.pis select ps_idn,ps_pca_bsc_jan06 from ags.prsnl_infrmtn_systm;
+delete from ags.clms_sp_snctn_mstr where tycode='SP5' and  substr(spn_unt_cd,2,1) = substr(:parameter.wing,2,1);
+
+delete from ags.clms_sp_snctn_mstr where tycode='SP6' and  substr(spn_unt_cd,2,1) = substr(:parameter.wing,2,1);
+
+delete from ags.clms_spp_entry where substr(sp_bll_id,5,1) = substr(:parameter.wing,2,1);
+delete from ags.clms_rcvry_entry where substr(rc_bll_id,5,1) = substr(:parameter.wing,2,1);
+delete from ags.clms_erng_entry where substr(er_bll_id,5,1) = substr(:parameter.wing,2,1);
+delete from ags.clms_py_bll_hdr where substr(bll_id,5,1) = substr(:parameter.wing,2,1);
+delete from ags.clms_extrnl_rcvry_dtls where substr(ex_bll_id,5,1) = substr(:parameter.wing,2,1);
+message('step 4 : Current file deleted');
+commit;
+
+end if;
+end;

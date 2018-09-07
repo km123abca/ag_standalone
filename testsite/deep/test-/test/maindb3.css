@@ -1,0 +1,149 @@
+
+
+
+		#error 
+			{color: #FF0000;}
+		
+		#namett
+			{visibility:hidden;}
+		#bl
+		   {
+			   font-size:15;
+		   }
+
+		   
+		   
+		   #i1
+		{
+	position: relative;
+    left:30%;
+    top:20%;
+    width:700px;
+    height:300px;
+    border:3px solid black;
+    font-size: 40px;
+    background-color: #00ffff;
+		}
+		
+		#bio
+			{
+			background-color: #ccffcc;
+			/*position: relative;*/
+			}
+		#pay
+			{
+			background-color: #66ff99;
+			}
+		f,#f
+			{
+			background-color: coral;
+			font-size:18px;
+			}
+		#ima
+			{
+			float:right;
+			}
+		
+		warn
+            {
+                color:red;
+                font-size: 48px;
+            }
+          #bioo
+            {           	
+            	position:centered;
+            }
+
+
+
+           #ima
+           {
+           	width:152px;height:195px;
+           }
+          
+
+
+	      
+
+
+		    #cbutton
+		    {
+		    	float:right;
+		    }
+
+		    #bodyora
+		{
+		background-image:url('09Novforest.jpg');
+		text-align:center;
+		}
+	        f
+			{
+			background-color: coral;
+			font-weight:bold;
+			}
+	#offheading
+			{
+			font-size:200%;
+			background-color:yellow;
+			text-align:center;
+			}
+
+			#box23
+			{
+				height:1240px;
+				width:1200px;
+				border:3px solid red;
+				background-color: yellow;
+				overflow: hidden;
+			}
+
+
+
+/*
+    @media(min-width: 992px)
+    	{
+			 #addr1
+	       		{
+	       	position: relative;left: 10px;
+	       		}
+	    	#addr2
+	       		{
+	       	position: relative;left: 10px;
+	       		}
+	       .firstbox
+				{
+			position:relative;
+			left:80px;
+				}
+			#citty
+				{
+				position: relative;left: 80px;
+				}
+
+			#edqual
+				{
+				position: relative;left: 80px;
+				}
+			#hra
+				{
+				position: relative;left:32px;
+				}
+            gpf
+           		 {
+			position: relative;left:32px;
+		    	}
+		}
+*/
+.lg{float:left;}
+		@media(min-width: 992px)
+ 		{ 
+ 			.lg{width: 33%;}
+       	}
+ 		@media((min-width: 768px) and (max-width: 991px))
+ 		{ 
+ 			.md{width: 50%;}
+ 		}
+ 		@media(max-width: 767px)
+ 		{ 
+ 			.sm{width: 100%;}
+ 		}

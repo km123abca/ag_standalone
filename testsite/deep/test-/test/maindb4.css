@@ -1,0 +1,24 @@
+
+
+
+#ima
+{
+float:right;
+width:152px;height:195px;
+}   
+
+*
+{color:red;}
+ .lg{width: 33%;}       
+		@media(min-width: 992px)
+ 		{ 
+ 			.lg{width: 33%;}
+       	}
+ 		@media((min-width: 768px) and (max-width: 991px))
+ 		{ 
+ 			.md{width: 50%;}
+ 		}
+ 		@media(max-width: 767px)
+ 		{ 
+ 			.sm{width: 100%;}
+ 		}

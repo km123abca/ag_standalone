@@ -1,0 +1,184 @@
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+
+
+<body>
+<div id="hoverscroll">
+fdfdfdff
+</div>
+
+
+
+<div id="hh" style="border:1px teal solid;width:50%;height:225px;overflow:scroll;">
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+</div>
+<div id="hh2" style="border:1px teal solid;width:90%;height:225px;overflow:scroll;">
+CentralEIS is a web enabled Employee Information System, developed for Central Govt.departments spread all over India. The no. of DDOS under GOI is 12,000 (approx) and no. of working Central ovt. employees is around 48 lacs. Currently DDOs are using different type of applications for generating paybills. These are, ComDDO, MicroSoft Excel or any
+other customised application developed for paybill. The tools have been developed by SDU,NIC Pune, to port the data in non-EIS format to EIS format. This document will enable the DDOs to prepare the data in EIS format. The data might be from various applications like,
+a) Microsoft Excel
+b) Any other customised application, using any RDBMS
+Data porting from any customised application, using any database/Excel (other than
+ComDDO and Offline ) to CentralEIS is done in following steps,
+1) Prepare the data in the given table structure of EIS
+2) Generate ‘. CSV’ file for this data
+3) Upload ‘.CSV’ file to CentralEIS
+4) Import uploaded data
+1) Prepare the data in the given table structure
+Transfer the existing data of employees to EIS format, using the following table
+structure. The various codes to be used while transferring the data are given in the tables
+listed in an Annexure. In case, if any code (controller, pay scale, posting mode etc.) is
+missing, please contact PFMS administrator.
+Sr.
+No.
+Field Name Field Type Description Table To
+Be Used
+1. PAO_CD Char(6) PAO Code used in
+PFMS
+2. DDO_CD Char(6) DDO Code used in
+PFMS
+3. TEMP_EMP_CD Char(13) Employee Code-
+(Serial No. within DDO)
+4. EMP_TYPE Char(2) Employee Type Table -1
+Personal Details
+5. EMP_TITLE Numeric (2) Salutation Code Table -2
+6. EMP_FNAME Char(30) First Name
+7. EMP_MNAME Char(30) Middle Name (Optional)
+8. EMP_LNAME Char(30) Last Name (Optional)
+9. EMP_SEX Char(1) Gender Table -3
+10. EMP_BIRTH_DT Date Date of Birth
+11. EMP_ENTRY_DT Date Date of Entry in Govt.
+Se rvice
+12. FIELD_DEPT_CD Char(4) Controller Code Table -5
+13. EMP_JOIN_DT Date Date of Joining in
+Capture Employee data from any Customised application to CentralEIS format
+CentralEIS Prepared by SDU, NIC, Pune P a g e | 2
+above Controller
+Posting Details
+14. PAY_CITY_CLASS Char(1) City Class Code Table -6
+15. EMP_CUROFF_DT Date Date of joining in
+current office
+16. EMP_CURDESIG_DT Date Date of Joining in
+Current
+Designation/Post
+17. EMP_CURPOST_MODE Numeric(3) Posting Mode Code Table -7
+Pay Details
+18. PAY_COMM Numeric(2) Pay Commission Code Table 8
+19. PSC_SCALE_CD Numeric(4) Pay Scale Code Table -9
+20. PAY_BASIC Numeric(6) Basic pay as per level
+of pay matrix
+21. PAY_WEF_DT Date Basic Pay WEF Date
+22. PAY_INCR_DT Date Next Increment Date
+23. EMP_PAN_NO Char(10) Pan No
+GPF/NPS Details
+24. EMP_PF_TYPE Char(2) Pf Type Table -10
+25. PF_NO Numeric(8) Account No. in case of
+GPF Employees
+26. PPA_NO char(16) PPA No. in case of
+NPS
+CGEGIS/CGHS/Category Details
+27. PAY_GIS_APPLICABLE Numeric(1) GIS Applicable Code Table -11
+28. PAY_GIS_GRP_CD Numeric(1) GIS Group Code Table -12
+29. GIS_DT Date GIS Membership Date
+30. CGHS_FLAG Char(1) Whether CGHS
+Beneficiary (Y/N)
+31. CGHS_NO Char(15) If CGHS beneficiary,
+then CGHS Card No.
+32. EMP_CATEGORY_CD Numeric(2) Table -13
+33. APT_EX_SERVICE Char(1) Whether Ex-
+Serviceman (Y/N)
+ID/Contact Details
+34. EMP_ADHAAR Char(12) Aadhar Card No
+35. EMP_ECODE Char(12) Employee Code given
+by the Department
+36. EMP_PHONE_NO Char(10) Mobile No
+37. EMAIL_PART1 Char(25) Divide Email-ID into two parts,
+separated by @. E.g. If
+pfms.eis@gov.in is an e-mail. Then
+‘pfms.eis’ is Part_1 and ‘gov.in’is
+Part_2. Do not save @ symbol.
+38. EMAIL_PART2 Char(25)
+GPF Monthly Subscription
+39. GPF_SUB_AMT Numeric(5) Monthly GPF
+Subscription
+Bank Details
+40. IFSC_CODE Char(11) IFSC Code of the branch
+41. EMP_BNK_AC_NO Char(20) Employee bank a/c
+number
+Capture Employee data from any Customised application to CentralEIS format
+CentralEIS Prepared by SDU, NIC, Pune P a g e | 3
+2) Set Format of Dates, Aadhar No. and Mobile No.
+After collecting data in Excel, it is advised to set the format of all the date fields,
+Aadhar No. and Mobile No. Otherwise, Excel will convert these two values to exponent form.
+This may be done as below,
+a) Date Fields : Right click column name(col. J for emp.birth date)-àDateàEnglish(India) in
+Locale-à14-03-2001 format in Typeà OK
+Capture Employee data from any Customised application to CentralEIS format
+CentralEIS Prepared by SDU, NIC, Pune P a g e | 4
+b) Aadhar and Mobile Number: Right click column name(col. AH for EMP_ADHARR)-
+àNumberàChange Decimal place to zeroà OK
+3)
+CentralEIS is a web enabled Employee Information System, developed for Central Govt. departments spread all over India. The no. of DDOS under GOI is 12,000 (approx) and no. of working Central Govt. employees is around 48 lacs. Currently DDOs are using different type of applications for generating paybills. These are, ComDDO, MicroSoft Excel or any other customised application developed for paybill. The tools have been developed by SDU,NIC Pune, to port the data in non-EIS format to EIS format. This document will enable the DDOs to prepare the data in EIS format. The data might be from various applications like, a) Microsoft Excel b) Any other customised application, using any RDBMS Data porting from any customised application, using any database/Excel (other than ComDDO and Offline ) to CentralEIS is done in following steps, 1) Prepare the data in the given table structure of EIS 2) Generate ‘. CSV’ file for this data 3) Upload ‘.CSV’ file to CentralEIS 4) Import uploaded data 1) Prepare the data in the given table structure Transfer the existing data of employees to EIS format, using the following table structure. The various codes to be used while transferring the data are given in the tables listed in an Annexure. In case, if any code (controller, pay scale, posting mode etc.) is missing, please contact PFMS administrator. Sr. No. Field Name Field Type Description Table To Be Used 1. PAO_CD Char(6) PAO Code used in PFMS 2. DDO_CD Char(6) DDO Code used in PFMS 3. TEMP_EMP_CD Char(13) Employee Code- (Serial No. within DDO) 4. EMP_TYPE Char(2) Employee Type Table -1 Personal Details 5. EMP_TITLE Numeric (2) Salutation Code Table -2 6. EMP_FNAME Char(30) First Name 7. EMP_MNAME Char(30) Middle Name (Optional) 8. EMP_LNAME Char(30) Last Name (Optional) 9. EMP_SEX Char(1) Gender Table -3 10. EMP_BIRTH_DT Date Date of Birth 11. EMP_ENTRY_DT Date Date of Entry in Govt. Se rvice 12. FIELD_DEPT_CD Char(4) Controller Code Table -5 13. EMP_JOIN_DT Date Date of Joining in Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 2 above Controller Posting Details 14. PAY_CITY_CLASS Char(1) City Class Code Table -6 15. EMP_CUROFF_DT Date Date of joining in current office 16. EMP_CURDESIG_DT Date Date of Joining in Current Designation/Post 17. EMP_CURPOST_MODE Numeric(3) Posting Mode Code Table -7 Pay Details 18. PAY_COMM Numeric(2) Pay Commission Code Table 8 19. PSC_SCALE_CD Numeric(4) Pay Scale Code Table -9 20. PAY_BASIC Numeric(6) Basic pay as per level of pay matrix 21. PAY_WEF_DT Date Basic Pay WEF Date 22. PAY_INCR_DT Date Next Increment Date 23. EMP_PAN_NO Char(10) Pan No GPF/NPS Details 24. EMP_PF_TYPE Char(2) Pf Type Table -10 25. PF_NO Numeric(8) Account No. in case of GPF Employees 26. PPA_NO char(16) PPA No. in case of NPS CGEGIS/CGHS/Category Details 27. PAY_GIS_APPLICABLE Numeric(1) GIS Applicable Code Table -11 28. PAY_GIS_GRP_CD Numeric(1) GIS Group Code Table -12 29. GIS_DT Date GIS Membership Date 30. CGHS_FLAG Char(1) Whether CGHS Beneficiary (Y/N) 31. CGHS_NO Char(15) If CGHS beneficiary, then CGHS Card No. 32. EMP_CATEGORY_CD Numeric(2) Table -13 33. APT_EX_SERVICE Char(1) Whether Ex- Serviceman (Y/N) ID/Contact Details 34. EMP_ADHAAR Char(12) Aadhar Card No 35. EMP_ECODE Char(12) Employee Code given by the Department 36. EMP_PHONE_NO Char(10) Mobile No 37. EMAIL_PART1 Char(25) Divide Email-ID into two parts, separated by @. E.g. If pfms.eis@gov.in is an e-mail. Then ‘pfms.eis’ is Part_1 and ‘gov.in’is Part_2. Do not save @ symbol. 38. EMAIL_PART2 Char(25) GPF Monthly Subscription 39. GPF_SUB_AMT Numeric(5) Monthly GPF Subscription Bank Details 40. IFSC_CODE Char(11) IFSC Code of the branch 41. EMP_BNK_AC_NO Char(20) Employee bank a/c number Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 3 2) Set Format of Dates, Aadhar No. and Mobile No. After collecting data in Excel, it is advised to set the format of all the date fields, Aadhar No. and Mobile No. Otherwise, Excel will convert these two values to exponent form. This may be done as below, a) Date Fields : Right click column name(col. J for emp.birth date)-àDateàEnglish(India) in Locale-à14-03-2001 format in Typeà OK Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 4 b) Aadhar and Mobile Number: Right click column name(col. AH for EMP_ADHARR)- àNumberàChange Decimal place to zeroà OK 3)
+CentralEIS is a web enabled Employee Information System, developed for Central Govt. departments spread all over India. The no. of DDOS under GOI is 12,000 (approx) and no. of working Central Govt. employees is around 48 lacs. Currently DDOs are using different type of applications for generating paybills. These are, ComDDO, MicroSoft Excel or any other customised application developed for paybill. The tools have been developed by SDU,NIC Pune, to port the data in non-EIS format to EIS format. This document will enable the DDOs to prepare the data in EIS format. The data might be from various applications like, a) Microsoft Excel b) Any other customised application, using any RDBMS Data porting from any customised application, using any database/Excel (other than ComDDO and Offline ) to CentralEIS is done in following steps, 1) Prepare the data in the given table structure of EIS 2) Generate ‘. CSV’ file for this data 3) Upload ‘.CSV’ file to CentralEIS 4) Import uploaded data 1) Prepare the data in the given table structure Transfer the existing data of employees to EIS format, using the following table structure. The various codes to be used while transferring the data are given in the tables listed in an Annexure. In case, if any code (controller, pay scale, posting mode etc.) is missing, please contact PFMS administrator. Sr. No. Field Name Field Type Description Table To Be Used 1. PAO_CD Char(6) PAO Code used in PFMS 2. DDO_CD Char(6) DDO Code used in PFMS 3. TEMP_EMP_CD Char(13) Employee Code- (Serial No. within DDO) 4. EMP_TYPE Char(2) Employee Type Table -1 Personal Details 5. EMP_TITLE Numeric (2) Salutation Code Table -2 6. EMP_FNAME Char(30) First Name 7. EMP_MNAME Char(30) Middle Name (Optional) 8. EMP_LNAME Char(30) Last Name (Optional) 9. EMP_SEX Char(1) Gender Table -3 10. EMP_BIRTH_DT Date Date of Birth 11. EMP_ENTRY_DT Date Date of Entry in Govt. Se rvice 12. FIELD_DEPT_CD Char(4) Controller Code Table -5 13. EMP_JOIN_DT Date Date of Joining in Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 2 above Controller Posting Details 14. PAY_CITY_CLASS Char(1) City Class Code Table -6 15. EMP_CUROFF_DT Date Date of joining in current office 16. EMP_CURDESIG_DT Date Date of Joining in Current Designation/Post 17. EMP_CURPOST_MODE Numeric(3) Posting Mode Code Table -7 Pay Details 18. PAY_COMM Numeric(2) Pay Commission Code Table 8 19. PSC_SCALE_CD Numeric(4) Pay Scale Code Table -9 20. PAY_BASIC Numeric(6) Basic pay as per level of pay matrix 21. PAY_WEF_DT Date Basic Pay WEF Date 22. PAY_INCR_DT Date Next Increment Date 23. EMP_PAN_NO Char(10) Pan No GPF/NPS Details 24. EMP_PF_TYPE Char(2) Pf Type Table -10 25. PF_NO Numeric(8) Account No. in case of GPF Employees 26. PPA_NO char(16) PPA No. in case of NPS CGEGIS/CGHS/Category Details 27. PAY_GIS_APPLICABLE Numeric(1) GIS Applicable Code Table -11 28. PAY_GIS_GRP_CD Numeric(1) GIS Group Code Table -12 29. GIS_DT Date GIS Membership Date 30. CGHS_FLAG Char(1) Whether CGHS Beneficiary (Y/N) 31. CGHS_NO Char(15) If CGHS beneficiary, then CGHS Card No. 32. EMP_CATEGORY_CD Numeric(2) Table -13 33. APT_EX_SERVICE Char(1) Whether Ex- Serviceman (Y/N) ID/Contact Details 34. EMP_ADHAAR Char(12) Aadhar Card No 35. EMP_ECODE Char(12) Employee Code given by the Department 36. EMP_PHONE_NO Char(10) Mobile No 37. EMAIL_PART1 Char(25) Divide Email-ID into two parts, separated by @. E.g. If pfms.eis@gov.in is an e-mail. Then ‘pfms.eis’ is Part_1 and ‘gov.in’is Part_2. Do not save @ symbol. 38. EMAIL_PART2 Char(25) GPF Monthly Subscription 39. GPF_SUB_AMT Numeric(5) Monthly GPF Subscription Bank Details 40. IFSC_CODE Char(11) IFSC Code of the branch 41. EMP_BNK_AC_NO Char(20) Employee bank a/c number Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 3 2) Set Format of Dates, Aadhar No. and Mobile No. After collecting data in Excel, it is advised to set the format of all the date fields, Aadhar No. and Mobile No. Otherwise, Excel will convert these two values to exponent form. This may be done as below, a) Date Fields : Right click column name(col. J for emp.birth date)-àDateàEnglish(India) in Locale-à14-03-2001 format in Typeà OK Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 4 b) Aadhar and Mobile Number: Right click column name(col. AH for EMP_ADHARR)- àNumberàChange Decimal place to zeroà OK 3)
+CentralEIS is a web enabled Employee Information System, developed for Central Govt. departments spread all over India. The no. of DDOS under GOI is 12,000 (approx) and no. of working Central Govt. employees is around 48 lacs. Currently DDOs are using different type of applications for generating paybills. These are, ComDDO, MicroSoft Excel or any other customised application developed for paybill. The tools have been developed by SDU,NIC Pune, to port the data in non-EIS format to EIS format. This document will enable the DDOs to prepare the data in EIS format. The data might be from various applications like, a) Microsoft Excel b) Any other customised application, using any RDBMS Data porting from any customised application, using any database/Excel (other than ComDDO and Offline ) to CentralEIS is done in following steps, 1) Prepare the data in the given table structure of EIS 2) Generate ‘. CSV’ file for this data 3) Upload ‘.CSV’ file to CentralEIS 4) Import uploaded data 1) Prepare the data in the given table structure Transfer the existing data of employees to EIS format, using the following table structure. The various codes to be used while transferring the data are given in the tables listed in an Annexure. In case, if any code (controller, pay scale, posting mode etc.) is missing, please contact PFMS administrator. Sr. No. Field Name Field Type Description Table To Be Used 1. PAO_CD Char(6) PAO Code used in PFMS 2. DDO_CD Char(6) DDO Code used in PFMS 3. TEMP_EMP_CD Char(13) Employee Code- (Serial No. within DDO) 4. EMP_TYPE Char(2) Employee Type Table -1 Personal Details 5. EMP_TITLE Numeric (2) Salutation Code Table -2 6. EMP_FNAME Char(30) First Name 7. EMP_MNAME Char(30) Middle Name (Optional) 8. EMP_LNAME Char(30) Last Name (Optional) 9. EMP_SEX Char(1) Gender Table -3 10. EMP_BIRTH_DT Date Date of Birth 11. EMP_ENTRY_DT Date Date of Entry in Govt. Se rvice 12. FIELD_DEPT_CD Char(4) Controller Code Table -5 13. EMP_JOIN_DT Date Date of Joining in Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 2 above Controller Posting Details 14. PAY_CITY_CLASS Char(1) City Class Code Table -6 15. EMP_CUROFF_DT Date Date of joining in current office 16. EMP_CURDESIG_DT Date Date of Joining in Current Designation/Post 17. EMP_CURPOST_MODE Numeric(3) Posting Mode Code Table -7 Pay Details 18. PAY_COMM Numeric(2) Pay Commission Code Table 8 19. PSC_SCALE_CD Numeric(4) Pay Scale Code Table -9 20. PAY_BASIC Numeric(6) Basic pay as per level of pay matrix 21. PAY_WEF_DT Date Basic Pay WEF Date 22. PAY_INCR_DT Date Next Increment Date 23. EMP_PAN_NO Char(10) Pan No GPF/NPS Details 24. EMP_PF_TYPE Char(2) Pf Type Table -10 25. PF_NO Numeric(8) Account No. in case of GPF Employees 26. PPA_NO char(16) PPA No. in case of NPS CGEGIS/CGHS/Category Details 27. PAY_GIS_APPLICABLE Numeric(1) GIS Applicable Code Table -11 28. PAY_GIS_GRP_CD Numeric(1) GIS Group Code Table -12 29. GIS_DT Date GIS Membership Date 30. CGHS_FLAG Char(1) Whether CGHS Beneficiary (Y/N) 31. CGHS_NO Char(15) If CGHS beneficiary, then CGHS Card No. 32. EMP_CATEGORY_CD Numeric(2) Table -13 33. APT_EX_SERVICE Char(1) Whether Ex- Serviceman (Y/N) ID/Contact Details 34. EMP_ADHAAR Char(12) Aadhar Card No 35. EMP_ECODE Char(12) Employee Code given by the Department 36. EMP_PHONE_NO Char(10) Mobile No 37. EMAIL_PART1 Char(25) Divide Email-ID into two parts, separated by @. E.g. If pfms.eis@gov.in is an e-mail. Then ‘pfms.eis’ is Part_1 and ‘gov.in’is Part_2. Do not save @ symbol. 38. EMAIL_PART2 Char(25) GPF Monthly Subscription 39. GPF_SUB_AMT Numeric(5) Monthly GPF Subscription Bank Details 40. IFSC_CODE Char(11) IFSC Code of the branch 41. EMP_BNK_AC_NO Char(20) Employee bank a/c number Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 3 2) Set Format of Dates, Aadhar No. and Mobile No. After collecting data in Excel, it is advised to set the format of all the date fields, Aadhar No. and Mobile No. Otherwise, Excel will convert these two values to exponent form. This may be done as below, a) Date Fields : Right click column name(col. J for emp.birth date)-àDateàEnglish(India) in Locale-à14-03-2001 format in Typeà OK Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 4 b) Aadhar and Mobile Number: Right click column name(col. AH for EMP_ADHARR)- àNumberàChange Decimal place to zeroà OK 3)
+CentralEIS is a web enabled Employee Information System, developed for Central Govt. departments spread all over India. The no. of DDOS under GOI is 12,000 (approx) and no. of working Central Govt. employees is around 48 lacs. Currently DDOs are using different type of applications for generating paybills. These are, ComDDO, MicroSoft Excel or any other customised application developed for paybill. The tools have been developed by SDU,NIC Pune, to port the data in non-EIS format to EIS format. This document will enable the DDOs to prepare the data in EIS format. The data might be from various applications like, a) Microsoft Excel b) Any other customised application, using any RDBMS Data porting from any customised application, using any database/Excel (other than ComDDO and Offline ) to CentralEIS is done in following steps, 1) Prepare the data in the given table structure of EIS 2) Generate ‘. CSV’ file for this data 3) Upload ‘.CSV’ file to CentralEIS 4) Import uploaded data 1) Prepare the data in the given table structure Transfer the existing data of employees to EIS format, using the following table structure. The various codes to be used while transferring the data are given in the tables listed in an Annexure. In case, if any code (controller, pay scale, posting mode etc.) is missing, please contact PFMS administrator. Sr. No. Field Name Field Type Description Table To Be Used 1. PAO_CD Char(6) PAO Code used in PFMS 2. DDO_CD Char(6) DDO Code used in PFMS 3. TEMP_EMP_CD Char(13) Employee Code- (Serial No. within DDO) 4. EMP_TYPE Char(2) Employee Type Table -1 Personal Details 5. EMP_TITLE Numeric (2) Salutation Code Table -2 6. EMP_FNAME Char(30) First Name 7. EMP_MNAME Char(30) Middle Name (Optional) 8. EMP_LNAME Char(30) Last Name (Optional) 9. EMP_SEX Char(1) Gender Table -3 10. EMP_BIRTH_DT Date Date of Birth 11. EMP_ENTRY_DT Date Date of Entry in Govt. Se rvice 12. FIELD_DEPT_CD Char(4) Controller Code Table -5 13. EMP_JOIN_DT Date Date of Joining in Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 2 above Controller Posting Details 14. PAY_CITY_CLASS Char(1) City Class Code Table -6 15. EMP_CUROFF_DT Date Date of joining in current office 16. EMP_CURDESIG_DT Date Date of Joining in Current Designation/Post 17. EMP_CURPOST_MODE Numeric(3) Posting Mode Code Table -7 Pay Details 18. PAY_COMM Numeric(2) Pay Commission Code Table 8 19. PSC_SCALE_CD Numeric(4) Pay Scale Code Table -9 20. PAY_BASIC Numeric(6) Basic pay as per level of pay matrix 21. PAY_WEF_DT Date Basic Pay WEF Date 22. PAY_INCR_DT Date Next Increment Date 23. EMP_PAN_NO Char(10) Pan No GPF/NPS Details 24. EMP_PF_TYPE Char(2) Pf Type Table -10 25. PF_NO Numeric(8) Account No. in case of GPF Employees 26. PPA_NO char(16) PPA No. in case of NPS CGEGIS/CGHS/Category Details 27. PAY_GIS_APPLICABLE Numeric(1) GIS Applicable Code Table -11 28. PAY_GIS_GRP_CD Numeric(1) GIS Group Code Table -12 29. GIS_DT Date GIS Membership Date 30. CGHS_FLAG Char(1) Whether CGHS Beneficiary (Y/N) 31. CGHS_NO Char(15) If CGHS beneficiary, then CGHS Card No. 32. EMP_CATEGORY_CD Numeric(2) Table -13 33. APT_EX_SERVICE Char(1) Whether Ex- Serviceman (Y/N) ID/Contact Details 34. EMP_ADHAAR Char(12) Aadhar Card No 35. EMP_ECODE Char(12) Employee Code given by the Department 36. EMP_PHONE_NO Char(10) Mobile No 37. EMAIL_PART1 Char(25) Divide Email-ID into two parts, separated by @. E.g. If pfms.eis@gov.in is an e-mail. Then ‘pfms.eis’ is Part_1 and ‘gov.in’is Part_2. Do not save @ symbol. 38. EMAIL_PART2 Char(25) GPF Monthly Subscription 39. GPF_SUB_AMT Numeric(5) Monthly GPF Subscription Bank Details 40. IFSC_CODE Char(11) IFSC Code of the branch 41. EMP_BNK_AC_NO Char(20) Employee bank a/c number Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 3 2) Set Format of Dates, Aadhar No. and Mobile No. After collecting data in Excel, it is advised to set the format of all the date fields, Aadhar No. and Mobile No. Otherwise, Excel will convert these two values to exponent form. This may be done as below, a) Date Fields : Right click column name(col. J for emp.birth date)-àDateàEnglish(India) in Locale-à14-03-2001 format in Typeà OK Capture Employee data from any Customised application to CentralEIS format CentralEIS Prepared by SDU, NIC, Pune P a g e | 4 b) Aadhar and Mobile Number: Right click column name(col. AH for EMP_ADHARR)- àNumberàChange Decimal place to zeroà OK 3)
+</div>
+
+<script>
+
+/*
+ (function () 
+        {
+         var speed = 1, timer;
+        $("#hoverscroll").hover(
+            function () 
+            {
+            var div = $('#hh');
+             (function startscrolling()
+                {
+                timer = setTimeout(function () 
+                    {
+                    var pos = div.scrollTop();
+                    div.scrollTop(pos + speed);
+                    startscrolling();
+                     }, 100      );
+                }
+             )();
+             },
+            function () 
+                {
+                clearTimeout(timer);
+                speed = 1;
+                }
+                                )
+    .click(function()
+                {
+                if (speed < 6) speed++;
+                }
+          );
+
+          }
+);*/
+$(document).ready(function() {
+    var count;
+    var interval;
+
+    $("#hoverscroll").on('mouseover', function() {
+        var div = $('#hh');
+
+        interval = setInterval(function(){
+            count = count || 1;
+            var pos = div.scrollLeft();
+            div.scrollLeft(pos + count);
+        }, 100);
+    }).click(function() {
+        count < 6 && count++;
+    }).on('mouseout', function() {
+        // Uncomment this line if you want to reset the speed on out
+        // count = 0;
+        clearInterval(interval);
+    });
+});
+</script>
+</body>

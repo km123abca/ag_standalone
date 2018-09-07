@@ -1,0 +1,17 @@
+select a.l_idno id,
+           b.ps_nm name,
+           a.l_typ leavetype,
+           a.fromdate fromd,
+           a.todate tod,
+           a.days days,
+           a.rmrks rmrks,
+           cdr.dmn_dscrptn cadre
+from
+           leavemonitor a,prsnl_infrmtn_systm b,estt_dmn_mstr cdr
+where
+           a.l_idno=b.ps_idn  and b.ps_cdr_id like 'DC05' and a.l_typ like '%' and cdr.dmn_id(+)=ps_cdr_id and
+          ( 
+          (a.todate between  to_date(nvl('20/06/2009', '01/01/'||to_char(sysdate,'yyyy')),'dd/mm/yyyy')  and to_date(nvl('31/12/2018', '31/12/' ||to_char(sysdate,'yyyy'))    ,'dd/mm/yyyy')) or
+           (a.fromdate between   to_date(nvl('20/06/2009', '01/01/'||to_char(sysdate,'yyyy')),'dd/mm/yyyy')  and  to_date(nvl('31/12/2018', '31/12/' ||to_char(sysdate,'yyyy'))    ,'dd/mm/yyyy')) 
+          )
+           order by b.ps_nm,a.fromdate 
