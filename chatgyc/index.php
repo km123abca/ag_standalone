@@ -59,6 +59,23 @@ function checkSignOut(res)
 		}
 	}
 
+											       function replaze(ztring,char2replace,replacewid)
+										       		{
+										       		var out_ztring=ztring;
+										       		var ind=ztring.indexOf(char2replace);
+										       		var loopcontroller=1;
+										       		while (ind!=-1)
+										       			{
+										       		out_ztring=out_ztring.replace(char2replace,replacewid);
+										       		ind=out_ztring.indexOf(char2replace);
+
+										       		loopcontroller+=1;
+										       		if (loopcontroller>100) break;
+										       			}
+										       			return out_ztring;
+
+										       		}
+
 
 	function shapelinks(inptex)
      	{
@@ -84,6 +101,13 @@ function checkSignOut(res)
      		y=inptex.indexOf(t1,x);
      		st_in=y+1;
      		midstr=inptex.substr(x,y-x);
+     		if (midstr.match(/.JPG/g)=='.JPG')
+     			{
+     			var imtag="<img src='"+midstr+"' alt='no preview' height='100' width='150'>";
+     			midstr_mod="<br><a href='"+midstr+"' target=blank>"+imtag+"</a>";
+
+     			}
+     		else
      		midstr_mod="<a href='"+midstr+"' target=blank>attachment</a>";
      		//alert(t1+midstr+t1);
      		//alert(midstr_mod);
@@ -107,9 +131,11 @@ function showMessages(res)
 	messages=document.createElement("span");
 	msg2pr=msgTmArr[0];
 	msg2pr=shapelinks(msg2pr);
+	msg2pr=smiley_filter(msg2pr);
 	//alert(msgarr);
 	messages.innerHTML=msg2pr;
 	chatBox.appendChild(messages);
+	if (msg2pr!='')
 	chatBox.scrollTop=chatBox.scrollHeight;
 	}
 
@@ -151,9 +177,30 @@ function updateuploadinfo()
 document.querySelector('uploadinffo').innerHTML='';		
 	}
 
+
+
+function smiley_filter(msg2)
+	{   var msg3=msg2;
+		var sm_link="<img src='uploads/smileym.jpg' height='18' width='20' alt='fatal error'>";
+		var sm_link2="<img src='uploads/smileysad.jpg' height='18' width='20' alt='fatal error'>";
+		var sm_link3="<img src='uploads/txhumbsupxx.jpg' height='18' width='20' alt='fatal error'>";
+		var sm_link4="<img src='uploads/mock.jpg' height='18' width='20' alt='fatal error'>";
+		var sm_link5="<img src='uploads/angry.jpg' height='18' width='20' alt='fatal error'>";
+		
+		msg3=replaze(msg3,':-)',sm_link);
+		msg3=replaze(msg3,':-(',sm_link2);
+		msg3=replaze(msg3,'thumbsup',sm_link3);
+		msg3=replaze(msg3,':-0',sm_link4);
+		msg3=replaze(msg3,':-^',sm_link5);
+		return msg3;
+
+	}
+
 function sendMessage()
 	{
 	var linkdat=document.getElementById('atac').innerHTML;
+	//var message_typed=messageForm.message.value;
+	//message_typed=smiley_filter(message_typed);
 	data="message="+messageForm.message.value+"&user="+signInForm.userName.value+"&linkdat="+linkdat;
 	//console.log(data);
 	if (linkdat!='none') document.getElementById('atac').innerHTML='none'; 
@@ -287,6 +334,21 @@ function Ajax_Send(GP,URL,PARAMETERS,RESPONSEFUNCTION)
 						xmlhttp.send(PARAMETERS);
 						}
 	}
+
+
+																		function fillsmile(emo)
+																		{
+																	    var locstr;
+																		if (emo=='smile') locstr=' :-)';
+																		else if (emo=='sad') locstr=' :-(';
+																		else if (emo=='tup') locstr=' thumbsup';
+																		else if (emo=='moc') locstr=' :-0';
+																		else if (emo=='ang') locstr=' :-^';
+
+																		if(signInForm.signInButt.name=='signOut')
+																			messageForm.message.value+=locstr;
+
+																		}
 </script>
 
 <style>
@@ -399,6 +461,8 @@ if (isset($_REQUEST['us_nm'])) $cuser=True;
 return $cuser;
 		}
 
+
+
 ?>
 
 <body   <?php
@@ -474,6 +538,13 @@ return $cuser;
 				document.querySelector('uploadinffo').innerHTML='YOU HAVE SELECTED A FILE TO BE UPLOADED.ONCE YOU PRESS ENTER THE ATTACHMENT WILL BE SENT ALONG WITH YOUR MESSAGE';
 			//alert(document.querySelector('atac').innerHTML);
 </script>
+
+<br>
+<a href="javascript:fillsmile('smile')"><img src='uploads/smileym.jpg' height='18' width='20' alt='fatal error'></a>
+<a href="javascript:fillsmile('sad')"><img src='uploads/smileysad.jpg' height='18' width='20' alt='fatal error'></a>
+<a href="javascript:fillsmile('tup')"><img src='uploads/txhumbsupxx.jpg' height='18' width='20' alt='fatal error'></a>
+<a href="javascript:fillsmile('moc')"><img src='uploads/mock.jpg' height='18' width='20' alt='fatal error'></a>
+<a href="javascript:fillsmile('ang')"><img src='uploads/angry.jpg' height='18' width='20' alt='fatal error'></a>
 
 </body>
 </html>

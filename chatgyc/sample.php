@@ -126,6 +126,46 @@
      			document.querySelector('#ta').value=shapelinks(document.querySelector('#ta').value);
      		}
 
+        function checkima()
+            {
+                var elem=document.querySelector('#in').value;
+                if (elem.match(/.jpg/g)=='.jpg')
+                    alert('That was an image');
+                else
+                    alert('That was not an image');
+
+            }
+
+       function replaze(ztring,char2replace,replacewid)
+       		{
+       		var out_ztring=ztring;
+       		var ind=ztring.indexOf(char2replace);
+       		var loopcontroller=1;
+       		while (ind!=-1)
+       			{
+       		out_ztring=out_ztring.replace(char2replace,replacewid);
+       		ind=out_ztring.indexOf(char2replace);
+
+       		loopcontroller+=1;
+       		if (loopcontroller>100) break;
+       			}
+       			
+       		return out_ztring;
+
+       		}
+
+       function repl()
+       	{
+       var ins=document.querySelector('#ta').value;
+       var sm_link="<img src='uploads/smileym.jpg' height='18' width='20' alt='fatal error'>";
+	   var sm_link2="<img src='uploads/smileysad.jpg' height='18' width='20' alt='fatal error'>";
+       var sm_link3="<img src='uploads/txhumbsupxx.jpg' height='18' width='20' alt='fatal error'>";
+       //var ou=document.querySelector('ta2').value;
+       ou=replaze(ins,'thumbsup',sm_link2);
+       document.querySelector('#ta2').value=ou;
+       //document.querySelector('#ta2').value=ins.indexOf('h');
+       //alert(ins.indexOf('h'));
+       	}
 
     
 </script>
@@ -138,12 +178,16 @@
 <input id='in' name='in' type='text' size=100>
 <button type='button' id='bu' onclick='matcher()'>click</button>
 <button type='button' id='ext' onclick='ext2()'>check for link</button>
+<button type='button' id='imslot' onclick='checkima()'>check if image</button>
 <br>
 <textarea id='ta' rows=10 cols=40></textarea>
 <br>
 <button type='button' id='buz' onclick="procw()">filter</button>
+<button type='button' id='buz2' onclick="repl()">replace wo with this </button>
 <br>
 <textarea id='ta2' rows=10 cols=40></textarea>
+
+<b5></b5>
 
 <script>
 <?php
